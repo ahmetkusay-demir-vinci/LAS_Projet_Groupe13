@@ -1,5 +1,5 @@
-#ifndef _NETWORK_H
-#define _NETWORK_H
+#ifndef _NETWORK_H_
+#define _NETWORK_H_
 
 #include "structure.h"
 #define SERVER_PORT 9555

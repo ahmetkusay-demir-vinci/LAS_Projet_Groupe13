@@ -1,19 +1,19 @@
 #ifndef _JEU_H
 #define _JEU_H
 
+#include "structure.h"
 #define NBR_MAX_TUILE 40
 
 int* creerEnsembleTuile(int nbrTuiles);
 
-// il pas mis la fonction creerPlateurJoueur car je doute
-// int* creerPlateauJoueur(int taille);
+void initierPlateauJoueur(Joueur* joueur);
 
-int tirerTuile(int* tuiles,int tailleLogique);
+int tirerTuile(int* tuiles,int* tailleLogique);
 
-void placerTuile(int* plateau,int position,int taillelogique,int tuile);
+void placerTuile(int* plateau,int position,int* taillelogique,int tuile);
 
-int calculerScore(const int* plateau, int size);
+int calculerScore(const int* plateau);
 
-void afficherPlateau(const int* plateau, int size);
+void afficherPlateau(const int* plateau);
 
 #endif
