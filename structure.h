@@ -10,7 +10,7 @@ typedef struct Joueur
 	char pseudo[MAX_PSEUDO];
 	int sockfd;
 	int tableau[NBR_MAX_TUILE_PAR_TABLEAU];
-    int score;
+  int score;
 } Joueur;
 
 typedef struct StructMessage
