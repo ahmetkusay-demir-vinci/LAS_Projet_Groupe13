@@ -5,23 +5,44 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include "utils_v1.h"
 #include "structure.h"
+#include "utils_v1.h"
 #include "network.h"
-#include "jeu.h"
 
+#define TIME_INSCRIPTION 30
+#define MAX_PLAYERS 50
 #define MIN_PLAYERS 2
-#define MAX_PLAYERS 4
-#define TIME_INSCRIPTION 15
 
 volatile sig_atomic_t end_inscriptions = 0;
 Joueur tabPlayers[MAX_PLAYERS];
 int nbPLayers = 0;
-int* ensembleTuile;
 
 void endServerHandler(int sig)
 {
-    end_inscriptions = 1;
+    if (nbPLayers<MIN_PLAYERS)
+    {
+        end_inscriptions = 1;
+    }
+}
+
+int initSocketServer(int port)
+{
+	int sockfd = ssocket();
+
+	/* no socket error */
+
+	// setsockopt -> to avoid Address Already in Use
+	// to do before bind !
+	int option = 1;
+	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(int));
+
+	sbind(port, sockfd);
+
+	/* no bind error */
+	slisten(sockfd, MAX_PLAYERS);
+
+	/* no listen error */
+	return sockfd;
 }
 
 int main(int argc, char const *argv[])
@@ -31,15 +52,15 @@ int main(int argc, char const *argv[])
 	int ret;
 	struct pollfd fds[MAX_PLAYERS];
 	
-	// Gestionnaire pour SIGALRM
+
 	ssigaction(SIGALRM, endServerHandler);
 
-	// Initialisation du socket serveur
-	sockfd = initSocketServeur(SERVER_PORT);
+	sockfd = initSocketServer(SERVER_PORT);
 	printf("Le serveur tourne sur le port : %i \n", SERVER_PORT);
 
 	i = 0;
 	
+
 	// INSCRIPTION PART
 	alarm(TIME_INSCRIPTION);
 
@@ -89,7 +110,7 @@ int main(int argc, char const *argv[])
 		{
 			swrite(tabPlayers[i].sockfd, &msg, sizeof(msg));
 		}
-		deconnecterJoueur(tabPlayers, nbPLayers);
+		disconnect_players(tabPlayers, nbPLayers);
 		sclose(sockfd);
 		exit(0);
 	}
@@ -97,10 +118,8 @@ int main(int argc, char const *argv[])
 	{
 		printf("PARTIE VA DEMARRER ... \n");
 		msg.code = START_GAME;
-		for (i = 0; i < nbPLayers; i++){
+		for (i = 0; i < nbPLayers; i++)
 			swrite(tabPlayers[i].sockfd, &msg, sizeof(msg));
-		}
-		ensembleTuile = creerEnsembleTuile();
 	}
 
 	// GAME PART
@@ -138,14 +157,16 @@ int main(int argc, char const *argv[])
 				if (ret != 0)
 				{
 					tabPlayers[i].shot = msg.code;
-					printf("Joueur %s a joué \n", tabPlayers[i].pseudo);
+					printf("%s joue %s\n", tabPlayers[i].pseudo, codeToStr(msg.code));
 					nbPlayersAlreadyPlayed++;
 				}
 			}
 		}
 	}
 
-	deconnecterJoueur(tabPlayers, nbPLayers);
+	winner(tabPlayers[0], tabPlayers[1], winnerName);
+	printf("GAGNANT : %s\n", winnerName);
+	disconnect_players(tabPlayers, nbPLayers);
 	sclose(sockfd);
 	return 0;
 }

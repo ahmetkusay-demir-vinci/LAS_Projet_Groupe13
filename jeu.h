@@ -2,9 +2,11 @@
 #define _JEU_H
 
 #include "structure.h"
-#define NBR_MAX_TUILE 40
 
-int* creerEnsembleTuile(int nbrTuiles);
+#define NBR_MAX_TUILE 40
+#define NBR_MAX_TUILE_PAR_PLATEAU 20
+
+int* creerEnsembleTuile();
 
 void initierPlateauJoueur(Joueur* joueur);
 
