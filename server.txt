@@ -17,23 +17,12 @@
 volatile sig_atomic_t end_inscriptions = 0;
 Joueur tabPlayers[MAX_PLAYERS];
 int nbPLayers = 0;
-int ensembleTuiles[NBR_MAX_TUILE];
-// creerEnsembleTuile(ensembleTuiles);
-
-int scores[] = {0, 1, 3, 5, 7, 9, 11, 15, 20, 25, 30, 35, 40, 50, 60, 70, 85, 100, 150, 300};
-int scoreTotal = 0;
-// calculerScore(plateau, scores, &scoreTotal);
+int* ensembleTuile;
 
 void endServerHandler(int sig)
 {
     end_inscriptions = 1;
 }
-
-void childServerProcess(){
-
-}
-
-
 
 int main(int argc, char const *argv[])
 {
@@ -90,6 +79,7 @@ int main(int argc, char const *argv[])
 			}
 		}
 	}
+
 	printf("FIN DES INSCRIPTIONS\n");
 	if (nbPLayers < MIN_PLAYERS)
 	{
@@ -103,36 +93,15 @@ int main(int argc, char const *argv[])
 		sclose(sockfd);
 		exit(0);
 	}
-
-	printf("PARTIE VA DEMARRER ... \n");
-	msg.code = START_GAME;
-	for (i = 0; i < nbPLayers; i++){
-		swrite(tabPlayers[i].sockfd,&tabPlayers[i],sizeof(Joueur));
-		swrite(tabPlayers[i].sockfd, &msg, sizeof(msg));
-		
-	}
-	creerEnsembleTuiles(ensembleTuiles);
-	printf("Voici l'ensemble des tuiles \n");
-	for (int i = 0; i < NBR_MAX_TUILE; i++)
+	else
 	{
-		printf("%d|",ensembleTuiles[i]);
+		printf("PARTIE VA DEMARRER ... \n");
+		msg.code = START_GAME;
+		for (i = 0; i < nbPLayers; i++){
+			swrite(tabPlayers[i].sockfd, &msg, sizeof(msg));
+		}
+		ensembleTuile = creerEnsembleTuile();
 	}
-	printf("\n");
-	
-	
-	for (int i = 0; i < nbPLayers; i++)
-	{
-		fork_and_run0(childServerProcess);
-	}
-	
-	
-	
-
-
-
-
-
-
 
 	// GAME PART
 	int nbPlayersAlreadyPlayed = 0;
