@@ -3,20 +3,32 @@
 
 #include "jeu.h"
 
-int* creerEnsembleTuile() {
-    int* ensembleTuile = (int*)malloc(NBR_MAX_TUILE * sizeof(int));
+// int ensembleTuile[NBR_MAX_TUILE];
+// creerEnsembleTuile(ensembleTuiles);
 
+// int scores[] = {0, 1, 3, 5, 7, 9, 11, 15, 20, 25, 30, 35, 40, 50, 60, 70, 85, 100, 150, 300};
+// int scoreTotal = 0;
+// calculerScore(plateau, scores, &scoreTotal);
+
+void creerEnsembleTuiles(int* ensembleTuiles) {
     // Création des tuiles numérotées de 1 à 30 (avec doublons pour 11-19) et un joker (31)
     int index = 0;
     for (int i = 1; i <= 30; i++) {
-        ensembleTuile[index++] = i;
+        ensembleTuiles[index++] = i;
         if (i >= 11 && i <= 19) {
-            ensembleTuile[index++] = i; // Doublon pour 11-19
+            ensembleTuiles[index++] = i; // Doublon pour 11-19
         }
     }
-    ensembleTuile[index] = 31; // Joker
+    ensembleTuiles[index] = 31; // Joker
 
-    return ensembleTuile;
+    // Mélange des tuiles avec l'algorithme de Fisher-Yates
+    srand(time(NULL));
+    for (int i = NBR_MAX_TUILE - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        int temp = ensembleTuiles[i];
+        ensembleTuiles[i] = ensembleTuiles[j];
+        ensembleTuiles[j] = temp;
+    }
 }
 
 void initierPlateauJoueur(Joueur* joueur) {
@@ -26,17 +38,13 @@ void initierPlateauJoueur(Joueur* joueur) {
     }
 }
 
-int tirerTuile(int* tuiles, int* tailleLogique) {
+int tirerTuile(int* ensembleTuiles, int* tailleLogique) {
     if (*tailleLogique <= 0) {
         return -1; // Si le nombre de tuiles est insuffisant
     }
-    int index = rand() % *tailleLogique; // Tirage aléatoire d'une tuile
-    int tuile = tuiles[index];
-    
-    // Suppression de la tuile tirée de l'ensemble de tuiles
-    for (int i = index; i < (*tailleLogique - 1); i++) {
-        tuiles[i] = tuiles[i + 1];
-    }
+
+    // Tirage de la dernière tuile de l'ensemble
+    int tuile = ensembleTuiles[*tailleLogique - 1];
     (*tailleLogique)--;
 
     return tuile;
@@ -52,8 +60,7 @@ void placerTuile(int* plateau, int position, int* tailleLogique, int tuile) {
     while (plateau[position] != 0) {
         position++;
         if (position >= NBR_MAX_TUILE_PAR_PLATEAU) {
-            printf("Impossible de placer la tuile à la position spécifiée.\n");
-            return;
+            position = 0;
         }
     }
 
@@ -61,25 +68,20 @@ void placerTuile(int* plateau, int position, int* tailleLogique, int tuile) {
     (*tailleLogique)++;
 }
 
-int calculerScore(const int* plateau) {
-    int score = 0;
-    int suiteLength = 0;
-    int prevTuile = 0;
+void calculerScore(const int* plateau, const int* scores, int* scoreTotal) {
+    int longueurSuite = 1;
 
-    for (int i = 0; i < NBR_MAX_TUILE_PAR_PLATEAU; i++) {
-        if (plateau[i] != 0) {
-            if (plateau[i] > prevTuile) {
-                suiteLength++;
-            } else {
-                score += (suiteLength * (suiteLength + 1)) / 2; // Formule pour calculer le score d'une suite
-                suiteLength = 1;
-            }
-            prevTuile = plateau[i];
+    for (int i = 1; i < NBR_MAX_TUILE_PAR_PLATEAU; i++) {
+        if (plateau[i] > plateau[i - 1]) {
+            longueurSuite++;
+        } else {
+            *scoreTotal += scores[longueurSuite - 1]; // -1 car les indices commencent à 0
+            longueurSuite = 1;
         }
     }
-    score += (suiteLength * (suiteLength + 1)) / 2; // Ajout du score de la dernière suite
 
-    return score;
+    // Ajouter le score de la dernière suite
+    *scoreTotal += scores[longueurSuite - 1]; // -1 car les indices commencent à 0
 }
 
 void afficherPlateau(const int* plateau) {
