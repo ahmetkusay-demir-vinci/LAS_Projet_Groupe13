@@ -1,5 +1,7 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "ipc.h"
-#include "structure.h"
 
 int creerClassement(int nbrJoueurs)
 {
@@ -13,7 +15,7 @@ void lireClassement(int shm_id, int nbrJoueurs)
     
     for (int i = 0; i < nbrJoueurs; i++) 
     {
-        printf("%d : Joueur %s : %s\n", i+1, classement[i].nom, classement[i].score);
+        printf("%d : Joueur %s : %s\n", i+1, classement[i].pseudo, classement[i].score);
     }
 
     sshmdt(classement);

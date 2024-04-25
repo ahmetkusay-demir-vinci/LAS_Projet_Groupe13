@@ -1,7 +1,7 @@
-#include "jeu.h"
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "jeu.h"
 
 int* creerEnsembleTuile() {
     int* ensembleTuile = (int*)malloc(NBR_MAX_TUILE * sizeof(int));

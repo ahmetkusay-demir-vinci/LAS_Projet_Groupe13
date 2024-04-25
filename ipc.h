@@ -7,6 +7,10 @@
 #define NSEM 1
 #define VAL 1
 
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "structure.h"
+
 //permet de créer la mémoire partagé
 int creerClassement(int nbrJoueurs);
 
