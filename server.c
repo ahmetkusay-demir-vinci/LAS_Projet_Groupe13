@@ -17,6 +17,8 @@
 #define TIME_INSCRIPTION 15
 
 volatile sig_atomic_t end_inscriptions = 0;
+volatile sig_atomic_t sigint_pressed = 0;
+
 Joueur tabPlayers[MAX_PLAYERS];
 int nbPLayers = 0;
 int ensembleTuiles[NBR_MAX_TUILE];
@@ -33,9 +35,14 @@ int tablePipeEcritureDuFils[4][2];
 // création d'un masque (ensemble) pour les signaux
 sigset_t set;
 
-void endServerHandler(int sig)
+void endRegisterHandler(int sig)
 {
     end_inscriptions = 1;
+}
+
+void sigintHandler(int sig)
+{
+	sigint_pressed = 1;
 }
 
 void childServerProcess(void *arg0, void *arg1, void *arg2) {
@@ -50,49 +57,27 @@ void childServerProcess(void *arg0, void *arg1, void *arg2) {
 	
 	while (encours)
 	{
-		
-		printf("je suiss dans la boucle");
         int buffer;
-        int bytesRead = read(pipeEcritureDuPere[0], &buffer, sizeof(int));
-		checkNeg(bytesRead,"le read du fils qui foire ");
-        if (bytesRead == 0) {
-            // Si aucune donnée n'est lue, la connexion est fermée
-            printf("Le tube de lecture du père est fermé, sortie de la boucle.\n");
-    
-        }
+        sread(pipeEcritureDuPere[0], &buffer, sizeof(int));
+        
 		printf("socket %d",socketPlayer);
-		
         printf("La tuile récupérée dans le processus fils : %d\n", buffer);
 
-        int bytesWritten = swrite(socketPlayer, &buffer, sizeof(int));
-        if (bytesWritten == 0) {
-            // Si l'écriture échoue, la connexion est fermée
-            printf("Erreur lors de l'écriture vers le joueur, sortie de la boucle.\n");
-            
-        }
+        swrite(socketPlayer, &buffer, sizeof(int));
+        
 		encours=false;
 	}
 	
-    
-    
 	printf("c %d \n",pipeEcritureDuFils[0]);
 
 	// on cloture les pipe a la fin 
-    
     sclose(pipeEcritureDuPere[0]);
 	sclose(pipeEcritureDuFils[1]);
-
 }
 
 void createPipes(int i){
-
-	
-
 	spipe(tablePipeEcritureDuPere[i]);
 	spipe(tablePipeEcritureDuFils[i]);
-
-
-
 }
 
 
@@ -107,7 +92,8 @@ int main(int argc, char const *argv[])
 	ssigaddset(&set, SIGINT);
 
 	// Gestionnaire pour SIGALRM
-	ssigaction(SIGALRM, endServerHandler);
+	ssigaction(SIGALRM, endRegisterHandler);
+	ssigaction(SIGINT, sigintHandler);
 
 	// Initialisation du socket serveur
 	sockfd = initSocketServeur(SERVER_PORT);
@@ -156,14 +142,21 @@ int main(int argc, char const *argv[])
 	}
 
 	printf("FIN DES INSCRIPTIONS\n");
-	if (nbPLayers < MIN_PLAYERS)
+	if (nbPLayers < MIN_PLAYERS || sigint_pressed == 1)
 	{
-		printf("PARTIE ANNULEE .. PAS ASSEZ DE JOUEURS\n");
+		if(sigint_pressed == 1) {
+			printf("PARTIE ANNULEE .. CTRL-C ÉFFECTUÉ \n");
+		} else {
+			printf("PARTIE ANNULEE .. PAS ASSEZ DE JOUEURS\n");
+		}
+	
 		msg.code = CANCEL_GAME;
+
 		for (i = 0; i < nbPLayers; i++)
 		{
 			swrite(tabPlayers[i].sockfd, &msg, sizeof(msg));
 		}
+
 		deconnecterJoueur(tabPlayers, nbPLayers);
 		sclose(sockfd);
 		exit(0);
@@ -196,7 +189,7 @@ int main(int argc, char const *argv[])
 	{
 		int tuileTirer = tirerTuile(ensembleTuiles,&tailleLogiqueEnsemble);
 
-		printf("la tuile piocher est %d \n",tuileTirer);
+		printf("la tuile pioché est %d \n",tuileTirer);
 		
 		for (int i = 0; i < nbPLayers; i++)
 		{
@@ -210,11 +203,11 @@ int main(int argc, char const *argv[])
 	// FIN DE PARTIE 
 
 	// Déblocage des signaux (SIGINT)
-	sigprocmask(SIG_UNBLOCK, &set, NULL);
+	// sigprocmask(SIG_UNBLOCK, &set, NULL);
 
 	// on cloture les pipe
-	sclose(tablePipeEcritureDuPere[i][1]);
-	sclose(tablePipeEcritureDuFils[i][0]);
+	// sclose(tablePipeEcritureDuPere[i][1]);
+	// sclose(tablePipeEcritureDuFils[i][0]);
 	
 	// GAME PART
 	int nbPlayersAlreadyPlayed = 0;
