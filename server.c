@@ -57,6 +57,28 @@ void childServerProcess(void *arg0, void *arg1, void *arg2) {
 	
 	while (encours)
 	{
+		ret = poll(fds, MAX_PLAYERS, 1000);
+		checkNeg(ret, "server poll error");
+
+		if (ret == 0)
+			continue;
+
+		if (fds[1].revents & POLLIN)
+		{
+			ret = sread(tabPlayers[i].sockfd, &msg, sizeof(msg));
+			// tester si la connexion du client a été fermée: close(sockfd) ==> read renvoie 0
+			// OU utiliser un tableau de booléens fds_invalid[i] pour indiquer
+			// qu'un socket a été traité et ne doit plus l'être (cf. exemple19_avec_poll)
+			// printf("poll detected POLLIN event on client socket %d (%s)... %s", tabPlayers[i].sockfd, tabPlayers[i].pseudo, ret == 0 ? "this socket is closed!\n" : "\n");
+
+			if (ret != 0)
+			{
+				tabPlayers[i].shot = msg.code;
+				printf("Joueur %s a joué \n", tabPlayers[i].pseudo);
+				nbPlayersAlreadyPlayed++;
+			}
+		}
+
         int buffer;
         sread(pipeEcritureDuPere[0], &buffer, sizeof(int));
         
@@ -86,7 +108,7 @@ int main(int argc, char const *argv[])
     int sockfd, newsockfd, i;
 	StructMessage msg;
 	int ret;
-	struct pollfd fds[MAX_PLAYERS];
+	struct pollfd fds[MAX_PLAYERS * 2];
 	
 	ssigemptyset(&set);
 	ssigaddset(&set, SIGINT);
@@ -167,22 +189,27 @@ int main(int argc, char const *argv[])
 	
 	printf("PARTIE VA DEMARRER ... \n");
 	msg.code = START_GAME;
+
 	for (i = 0; i < nbPLayers; i++){
 		swrite(tabPlayers[i].sockfd,&tabPlayers[i],sizeof(Joueur));
 		swrite(tabPlayers[i].sockfd, &msg, sizeof(msg));
-		
 	}
 
 	creerEnsembleTuiles(ensembleTuiles);
 	int tailleLogiqueEnsemble=NBR_MAX_TUILE;
 	
+	// Création des processus fils pour servir les clients
 	for (int i = 0; i < nbPLayers; i++)
 	{
 		createPipes(i);
+		
+		// init poll
+		fds[i].fd = tablePipeEcritureDuPere[i][1];
+		fds[i].events = POLLIN;
+
 		fork_and_run3(childServerProcess, &(tabPlayers[i].sockfd), &tablePipeEcritureDuPere[i], &tablePipeEcritureDuFils[i]);
 		sclose(tablePipeEcritureDuPere[i][0]);
 		sclose(tablePipeEcritureDuFils[i][1]);
-	
 	}
 
 	while (nbr_tours<1)
@@ -212,15 +239,7 @@ int main(int argc, char const *argv[])
 	// GAME PART
 	int nbPlayersAlreadyPlayed = 0;
 
-	// init poll
-	for (i = 0; i < nbPLayers; i++)
-	{
-		fds[i].fd = tabPlayers[i].sockfd;
-		fds[i].events = POLLIN;
-	}
 	// loop game
-
-
 	while (nbPlayersAlreadyPlayed < nbPLayers)
 	{
 		// poll during 1 second
