@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include "utils_v1.h"
 #include "structure.h"
@@ -24,14 +25,19 @@ int ensembleTuiles[NBR_MAX_TUILE];
 int scores[] = {0, 1, 3, 5, 7, 9, 11, 15, 20, 25, 30, 35, 40, 50, 60, 70, 85, 100, 150, 300};
 int scoreTotal = 0;
 int nbr_tours=0;
+
 // calculerScore(plateau, scores, &scoreTotal);
 int tablePipeEcritureDuPere[4][2];
 int tablePipeEcritureDuFils[4][2];
+
+// création d'un masque (ensemble) pour les signaux
+sigset_t set;
 
 void endServerHandler(int sig)
 {
     end_inscriptions = 1;
 }
+
 void childServerProcess(void *arg0, void *arg1, void *arg2) {
     int socketPlayer = *((int*) arg0);
     int* pipeEcritureDuPere = (int*) arg1;
@@ -97,6 +103,9 @@ int main(int argc, char const *argv[])
 	int ret;
 	struct pollfd fds[MAX_PLAYERS];
 	
+	ssigemptyset(&set);
+	ssigaddset(&set, SIGINT);
+
 	// Gestionnaire pour SIGALRM
 	ssigaction(SIGALRM, endServerHandler);
 
@@ -145,6 +154,7 @@ int main(int argc, char const *argv[])
 			}
 		}
 	}
+
 	printf("FIN DES INSCRIPTIONS\n");
 	if (nbPLayers < MIN_PLAYERS)
 	{
@@ -159,6 +169,9 @@ int main(int argc, char const *argv[])
 		exit(0);
 	}
 
+	// Blocage des signaux (SIGINT)
+    sigprocmask(SIG_BLOCK, &set, NULL);
+	
 	printf("PARTIE VA DEMARRER ... \n");
 	msg.code = START_GAME;
 	for (i = 0; i < nbPLayers; i++){
@@ -166,9 +179,9 @@ int main(int argc, char const *argv[])
 		swrite(tabPlayers[i].sockfd, &msg, sizeof(msg));
 		
 	}
+
 	creerEnsembleTuiles(ensembleTuiles);
 	int tailleLogiqueEnsemble=NBR_MAX_TUILE;
-	
 	
 	for (int i = 0; i < nbPLayers; i++)
 	{
@@ -194,14 +207,15 @@ int main(int argc, char const *argv[])
 		
 	}
 
-	
-	// on cloture les pipe a la fin 
+	// FIN DE PARTIE 
+
+	// Déblocage des signaux (SIGINT)
+	sigprocmask(SIG_UNBLOCK, &set, NULL);
+
+	// on cloture les pipe
 	sclose(tablePipeEcritureDuPere[i][1]);
 	sclose(tablePipeEcritureDuFils[i][0]);
 	
-
-
-
 	// GAME PART
 	int nbPlayersAlreadyPlayed = 0;
 
