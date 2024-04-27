@@ -65,9 +65,11 @@ int main(int argc, char **argv)
 
 		int tuile;
 		sread(sockfd, &tuile, sizeof(int));
-		printf("la tuile est arrive a bon port %i \n",tuile);
+		printf("la tuile est arrive a bon port %d \n",tuile);
 		
-		
+		printf("je place la tuile\n ");
+		bool result = true;
+		swrite(sockfd,&result,sizeof(bool));
 	}
 	else
 	{

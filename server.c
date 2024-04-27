@@ -26,7 +26,7 @@ int ensembleTuiles[NBR_MAX_TUILE];
 
 int scores[] = {0, 1, 3, 5, 7, 9, 11, 15, 20, 25, 30, 35, 40, 50, 60, 70, 85, 100, 150, 300};
 int scoreTotal = 0;
-int nbr_tours=0;
+int nbr_tours = 0;
 
 // calculerScore(plateau, scores, &scoreTotal);
 int tablePipeEcritureDuPere[4][2];
@@ -37,7 +37,7 @@ sigset_t set;
 
 void endRegisterHandler(int sig)
 {
-    end_inscriptions = 1;
+	end_inscriptions = 1;
 }
 
 void sigintHandler(int sig)
@@ -45,71 +45,88 @@ void sigintHandler(int sig)
 	sigint_pressed = 1;
 }
 
-void childServerProcess(void *arg0, void *arg1, void *arg2) {
-    int socketPlayer = *((int*) arg0);
-    int* pipeEcritureDuPere = (int*) arg1;
-    int* pipeEcritureDuFils = (int*) arg2;
+void childServerProcess(void *arg0, void *arg1, void *arg2)
+{
+	int socketPlayer = *((int *)arg0);
+	int *pipeEcritureDuPere = (int *)arg1;
+	int *pipeEcritureDuFils = (int *)arg2;
 
-	bool encours=true;
+	bool encours = true;
+
+	struct pollfd fdsPipe[MAX_PLAYERS * 2];
+
+	// init poll
+	fdsPipe[0].fd = pipeEcritureDuPere[0];
+	fdsPipe[0].events = POLLIN;
+
+	struct pollfd fdsSocket[MAX_PLAYERS];
+
+	// init poll
+	fdsSocket[0].fd = socketPlayer;
+	fdsSocket[0].events = POLLIN;
+
+	int ret;
 
 	sclose(pipeEcritureDuPere[1]);
 	sclose(pipeEcritureDuFils[0]);
-	
+
 	while (encours)
 	{
-		ret = poll(fds, MAX_PLAYERS, 1000);
+
+		ret = poll(fdsPipe, MAX_PLAYERS, 1000);
 		checkNeg(ret, "server poll error");
 
 		if (ret == 0)
 			continue;
 
-		if (fds[1].revents & POLLIN)
+		if (fdsPipe[0].revents & POLLIN)
 		{
-			ret = sread(tabPlayers[i].sockfd, &msg, sizeof(msg));
-			// tester si la connexion du client a été fermée: close(sockfd) ==> read renvoie 0
-			// OU utiliser un tableau de booléens fds_invalid[i] pour indiquer
-			// qu'un socket a été traité et ne doit plus l'être (cf. exemple19_avec_poll)
-			// printf("poll detected POLLIN event on client socket %d (%s)... %s", tabPlayers[i].sockfd, tabPlayers[i].pseudo, ret == 0 ? "this socket is closed!\n" : "\n");
+			int tuile;
+			sread(pipeEcritureDuPere[0], &tuile, sizeof(int));
 
-			if (ret != 0)
-			{
-				tabPlayers[i].shot = msg.code;
-				printf("Joueur %s a joué \n", tabPlayers[i].pseudo);
-				nbPlayersAlreadyPlayed++;
-			}
+			printf("La tuile récupérée dans le pro
+			swrite(socketPlayer, &tuile, sizeof(int));
 		}
 
-        int buffer;
-        sread(pipeEcritureDuPere[0], &buffer, sizeof(int));
-        
-		printf("socket %d",socketPlayer);
-        printf("La tuile récupérée dans le processus fils : %d\n", buffer);
+		ret = poll(fdsSocket, MAX_PLAYERS, 1000);
+		checkNeg(ret, "server poll error");
 
-        swrite(socketPlayer, &buffer, sizeof(int));
-        
-		encours=false;
+		if (ret == 0)
+			continue;
+
+		if (fdsSocket[0].revents & POLLIN)
+		{
+			bool reponse;
+			sread(fdsSocket[0].fd, &reponse, sizeof(bool));
+
+			printf(" La tuile a ete poser dans le plateau ! \n");
+
+			swrite(pipeEcritureDuFils[1], &reponse, sizeof(bool));
+		}
+
+		encours = false;
 	}
-	
-	printf("c %d \n",pipeEcritureDuFils[0]);
 
-	// on cloture les pipe a la fin 
-    sclose(pipeEcritureDuPere[0]);
+	printf("c %d \n", pipeEcritureDuFils[0]);
+
+	// on cloture les pipe a la fin
+	sclose(pipeEcritureDuPere[0]);
 	sclose(pipeEcritureDuFils[1]);
 }
 
-void createPipes(int i){
+void createPipes(int i)
+{
 	spipe(tablePipeEcritureDuPere[i]);
 	spipe(tablePipeEcritureDuFils[i]);
 }
 
-
 int main(int argc, char const *argv[])
 {
-    int sockfd, newsockfd, i;
+	int sockfd, newsockfd, i;
 	StructMessage msg;
 	int ret;
 	struct pollfd fds[MAX_PLAYERS * 2];
-	
+
 	ssigemptyset(&set);
 	ssigaddset(&set, SIGINT);
 
@@ -122,7 +139,7 @@ int main(int argc, char const *argv[])
 	printf("Le serveur tourne sur le port : %i \n", SERVER_PORT);
 
 	i = 0;
-	
+
 	// INSCRIPTION PART
 	alarm(TIME_INSCRIPTION);
 
@@ -166,12 +183,15 @@ int main(int argc, char const *argv[])
 	printf("FIN DES INSCRIPTIONS\n");
 	if (nbPLayers < MIN_PLAYERS || sigint_pressed == 1)
 	{
-		if(sigint_pressed == 1) {
+		if (sigint_pressed == 1)
+		{
 			printf("PARTIE ANNULEE .. CTRL-C ÉFFECTUÉ \n");
-		} else {
+		}
+		else
+		{
 			printf("PARTIE ANNULEE .. PAS ASSEZ DE JOUEURS\n");
 		}
-	
+
 		msg.code = CANCEL_GAME;
 
 		for (i = 0; i < nbPLayers; i++)
@@ -185,57 +205,64 @@ int main(int argc, char const *argv[])
 	}
 
 	// Blocage des signaux (SIGINT)
-    sigprocmask(SIG_BLOCK, &set, NULL);
-	
+	//sigprocmask(SIG_BLOCK, &set, NULL);
+
 	printf("PARTIE VA DEMARRER ... \n");
 	msg.code = START_GAME;
 
-	for (i = 0; i < nbPLayers; i++){
-		swrite(tabPlayers[i].sockfd,&tabPlayers[i],sizeof(Joueur));
+	for (i = 0; i < nbPLayers; i++)
+	{
+		swrite(tabPlayers[i].sockfd, &tabPlayers[i], sizeof(Joueur));
 		swrite(tabPlayers[i].sockfd, &msg, sizeof(msg));
 	}
 
 	creerEnsembleTuiles(ensembleTuiles);
-	int tailleLogiqueEnsemble=NBR_MAX_TUILE;
-	
+	int tailleLogiqueEnsemble = NBR_MAX_TUILE;
+
 	// Création des processus fils pour servir les clients
 	for (int i = 0; i < nbPLayers; i++)
 	{
 		createPipes(i);
-		
-		// init poll
-		fds[i].fd = tablePipeEcritureDuPere[i][1];
+		fds[i].fd = tablePipeEcritureDuFils[i][0];
 		fds[i].events = POLLIN;
-
 		fork_and_run3(childServerProcess, &(tabPlayers[i].sockfd), &tablePipeEcritureDuPere[i], &tablePipeEcritureDuFils[i]);
 		sclose(tablePipeEcritureDuPere[i][0]);
 		sclose(tablePipeEcritureDuFils[i][1]);
 	}
 
-	while (nbr_tours<1)
+	while (nbr_tours < 1)
 	{
-		int tuileTirer = tirerTuile(ensembleTuiles,&tailleLogiqueEnsemble);
+		int tuileTirer = tirerTuile(ensembleTuiles, &tailleLogiqueEnsemble);
 
-		printf("la tuile pioché est %d \n",tuileTirer);
-		
+		printf("la tuile pioché est %d \n", tuileTirer);
+
 		for (int i = 0; i < nbPLayers; i++)
 		{
-			swrite(tablePipeEcritureDuPere[i][1],&tuileTirer,sizeof(int));
-			
+			swrite(tablePipeEcritureDuPere[i][1], &tuileTirer, sizeof(int));
 		}
+		int compteur = 0;
+
+		while (compteur <= MAX_PLAYERS)
+		{
+			if (fds[i].revents & POLLIN)
+			{
+				printf("%d joueurs ont repondu\n",compteur);
+				compteur++;
+			}
+		}
+
 		nbr_tours++;
-		
 	}
 
-	// FIN DE PARTIE 
+	// FIN DE PARTIE
 
 	// Déblocage des signaux (SIGINT)
-	// sigprocmask(SIG_UNBLOCK, &set, NULL);
+	sigprocmask(SIG_UNBLOCK, &set, NULL);
 
 	// on cloture les pipe
 	// sclose(tablePipeEcritureDuPere[i][1]);
 	// sclose(tablePipeEcritureDuFils[i][0]);
-	
+
 	// GAME PART
 	int nbPlayersAlreadyPlayed = 0;
 
