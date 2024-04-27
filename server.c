@@ -22,17 +22,43 @@ int ensembleTuiles[NBR_MAX_TUILE];
 
 int scores[] = {0, 1, 3, 5, 7, 9, 11, 15, 20, 25, 30, 35, 40, 50, 60, 70, 85, 100, 150, 300};
 int scoreTotal = 0;
+int nbr_tours=0;
 // calculerScore(plateau, scores, &scoreTotal);
+int ** tablePipeEcriture;
+int ** tablePipeLecture;
 
 void endServerHandler(int sig)
 {
     end_inscriptions = 1;
 }
 
-void childServerProcess(){
+void childServerProcess(int socketPlayer,int tablePipeEcriture,int tablePipeLecture){
+	while (nbr_tours<=1)
+	{
+		int buffer;
+		sread(tablePipeLecture,&buffer,sizeof(int));
+		printf("la tuile recuperer dans child process %d \n",buffer);
+	}
+	
+	
 
 }
 
+void createPipes(int i){
+
+	int pipefdEcriture[2];
+	int pipefdLecture[2];
+
+	spipe(pipefdEcriture);
+	spipe(pipefdLecture);
+
+	sclose(pipefdEcriture[0]);
+	sclose(pipefdLecture[1]);
+
+	tablePipeEcriture[i]=pipefdEcriture;
+	tablePipeLecture[i]=pipefdLecture;
+
+}
 
 
 int main(int argc, char const *argv[])
@@ -112,6 +138,8 @@ int main(int argc, char const *argv[])
 		
 	}
 	creerEnsembleTuiles(ensembleTuiles);
+	int tailleLogiqueEnsemble=NBR_MAX_TUILE;
+
 	printf("Voici l'ensemble des tuiles \n");
 	for (int i = 0; i < NBR_MAX_TUILE; i++)
 	{
@@ -122,7 +150,20 @@ int main(int argc, char const *argv[])
 	
 	for (int i = 0; i < nbPLayers; i++)
 	{
-		fork_and_run0(childServerProcess);
+		createPipes(i);
+		fork_and_run3(childServerProcess,&tabPlayers[i].sockfd,&tablePipeEcriture[i],&tablePipeLecture[i]);		
+	}
+
+	while (nbr_tours<=1)
+	{
+		int tuileTirer = tirerTuile(ensembleTuiles,&tailleLogiqueEnsemble);
+		printf("la tuile piocher est %d \n",tuileTirer);
+		for (int i = 0; i < nbPLayers; i++)
+		{
+			swrite(*tablePipeEcriture[i],&tuileTirer,sizeof(int));
+		}
+		nbr_tours++;
+		
 	}
 	
 	

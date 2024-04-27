@@ -30,6 +30,7 @@ void creerEnsembleTuiles(int* ensembleTuiles) {
         ensembleTuiles[i] = ensembleTuiles[j];
         ensembleTuiles[j] = temp;
     }
+
 }
 
 void initierPlateauJoueur(Joueur* joueur) {
