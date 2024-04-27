@@ -62,9 +62,10 @@ int main(int argc, char **argv)
 		printf("DEBUT JEU\n");
 		initierPlateauJoueur(&joueur);
 		afficherPlateau(joueur.plateau);
-/*int* tuile;
+
+		int tuile;
 		sread(sockfd, &tuile, sizeof(int));
-		printf("la tuile est arrive a bon port %d \n",*tuile);*/
+		printf("la tuile est arrive a bon port %i \n",tuile);
 		
 		
 	}
