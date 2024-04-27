@@ -62,8 +62,11 @@ int main(int argc, char **argv)
 		printf("DEBUT JEU\n");
 		initierPlateauJoueur(&joueur);
 		afficherPlateau(joueur.plateau);
+/*int* tuile;
+		sread(sockfd, &tuile, sizeof(int));
+		printf("la tuile est arrive a bon port %d \n",*tuile);*/
 		
-		swrite(sockfd, &msg, sizeof(msg));
+		
 	}
 	else
 	{

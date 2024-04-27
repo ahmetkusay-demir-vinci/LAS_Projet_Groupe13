@@ -3,6 +3,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <fcntl.h>
 #include <unistd.h>
 
 #include "utils_v1.h"
@@ -24,40 +25,62 @@ int scores[] = {0, 1, 3, 5, 7, 9, 11, 15, 20, 25, 30, 35, 40, 50, 60, 70, 85, 10
 int scoreTotal = 0;
 int nbr_tours=0;
 // calculerScore(plateau, scores, &scoreTotal);
-int ** tablePipeEcriture;
-int ** tablePipeLecture;
+int tablePipeEcritureDuPere[4][2];
+int tablePipeEcritureDuFils[4][2];
 
 void endServerHandler(int sig)
 {
     end_inscriptions = 1;
 }
+void childServerProcess(void *arg0, void *arg1, void *arg2) {
+    int socketPlayer = *((int*) arg0);
+    int *tablePipeEcritureDuPere = (int*) arg1;
+    int *tablePipeEcritureDuFils = (int*) arg2;
 
-void childServerProcess(int socketPlayer,int tablePipeEcriture,int tablePipeLecture){
-	while (nbr_tours<=1)
-	{
-		int buffer;
-		sread(tablePipeLecture,&buffer,sizeof(int));
-		printf("la tuile recuperer dans child process %d \n",buffer);
-	}
-	
-	
+    bool encours = true;
+	printf("ici 1 %d \n",tablePipeEcritureDuPere[0]);
+	printf("ici 1 %d \n",tablePipeEcritureDuPere[1]);
+	printf("ici 2 %d \n",tablePipeEcritureDuFils[0]);
+	printf("ici 2 %d \n",tablePipeEcritureDuFils[1]);
+
+    while (encours)
+    {
+        int buffer;
+        int bytesRead = read(tablePipeEcritureDuPere[0], &buffer, sizeof(int));
+		checkNeg(bytesRead,"le read du fils qui foire ");
+        if (bytesRead == 0) {
+            // Si aucune donnée n'est lue, la connexion est fermée
+            printf("Le tube de lecture du père est fermé, sortie de la boucle.\n");
+            break;
+        }
+		printf("socket %d",socketPlayer);
+		/*
+        printf("La tuile récupérée dans le processus fils : %d\n", buffer);
+
+        int bytesWritten = swrite(socketPlayer, &buffer, sizeof(int));
+        if (bytesWritten == 0) {
+            // Si l'écriture échoue, la connexion est fermée
+            printf("Erreur lors de l'écriture vers le joueur, sortie de la boucle.\n");
+            break;
+        }*/
+    }
+    
+    // Fermer les descripteurs de fichier restants
 
 }
 
 void createPipes(int i){
 
-	int pipefdEcriture[2];
-	int pipefdLecture[2];
+	int pipefdEcritureDuPere[2];
+	int pipefdEcritureDuFils[2];
 
-	spipe(pipefdEcriture);
-	spipe(pipefdLecture);
+	spipe(pipefdEcritureDuPere);
+	spipe(pipefdEcritureDuFils);
 
-	sclose(pipefdEcriture[0]);
-	sclose(pipefdLecture[1]);
 
-	tablePipeEcriture[i]=pipefdEcriture;
-	tablePipeLecture[i]=pipefdLecture;
+	tablePipeEcritureDuPere[i][0]=pipefdEcritureDuPere;
 
+	tablePipeEcritureDuFils[i][0]=pipefdEcritureDuFils;
 }
 
 
@@ -151,7 +174,8 @@ int main(int argc, char const *argv[])
 	for (int i = 0; i < nbPLayers; i++)
 	{
 		createPipes(i);
-		fork_and_run3(childServerProcess,&tabPlayers[i].sockfd,&tablePipeEcriture[i],&tablePipeLecture[i]);		
+		fork_and_run3(childServerProcess, &(tabPlayers[i].sockfd), tablePipeEcritureDuPere[i], tablePipeEcritureDuFils[i]);
+		
 	}
 
 	while (nbr_tours<=1)
@@ -160,7 +184,8 @@ int main(int argc, char const *argv[])
 		printf("la tuile piocher est %d \n",tuileTirer);
 		for (int i = 0; i < nbPLayers; i++)
 		{
-			swrite(*tablePipeEcriture[i],&tuileTirer,sizeof(int));
+			int ret=write(tablePipeEcritureDuFils[i][1],&tuileTirer,sizeof(int));
+			checkNeg(ret,"ecriture de la tuile  a envoyer au  serveur fils");
 		}
 		nbr_tours++;
 		
