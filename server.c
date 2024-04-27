@@ -84,7 +84,7 @@ void childServerProcess(void *arg0, void *arg1, void *arg2)
 			int tuile;
 			sread(pipeEcritureDuPere[0], &tuile, sizeof(int));
 
-			printf("La tuile récupérée dans le pro
+			printf("La tuile récupérée dans le pro");
 			swrite(socketPlayer, &tuile, sizeof(int));
 		}
 
