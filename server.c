@@ -56,59 +56,11 @@ void childServerProcess(void *arg0, void *arg1, void *arg2)
 
 	bool encours = true;
 
-	// struct pollfd fdsPipe[MAX_PLAYERS * 2];
-
-	// init poll
-	// fdsPipe[0].fd = pipeEcritureDuPere[0];
-	// fdsPipe[0].events = POLLIN;
-
-	// struct pollfd fdsSocket[MAX_PLAYERS];
-
-	// init poll
-	// fdsSocket[0].fd = socketPlayer;
-	// fdsSocket[0].events = POLLIN;
-
-	// int ret;
-
 	sclose(pipeEcritureDuPere[1]);
 	sclose(pipeEcritureDuFils[0]);
 
 	while (encours)
 	{
-
-		/*ret = poll(fdsPipe, MAX_PLAYERS, 1000);
-		checkNeg(ret, "server poll error");
-
-		if (ret == 0)
-			continue;
-
-		if (fdsPipe[0].revents & POLLIN)
-		{
-			int tuile;
-			sread(pipeEcritureDuPere[0], &tuile, sizeof(int));
-
-			printf("La tuile récupérée dans le pro");
-			swrite(socketPlayer, &tuile, sizeof(int));
-		}
-
-		ret = poll(fdsSocket, MAX_PLAYERS, 1000);
-		checkNeg(ret, "server poll error");
-
-		if (ret == 0)
-			continue;
-
-		if (fdsSocket[0].revents & POLLIN)
-		{
-			bool reponse;
-			sread(fdsSocket[0].fd, &reponse, sizeof(bool));
-
-			printf(" La tuile a ete poser dans le plateau ! \n");
-
-			swrite(pipeEcritureDuFils[1], &reponse, sizeof(bool));
-		}
-
-		encours = false;*/
-
 		int tuile;
 		sread(pipeEcritureDuPere[0], &tuile, sizeof(int));
 
