@@ -62,14 +62,29 @@ int main(int argc, char **argv)
 		printf("DEBUT JEU\n");
 		initierPlateauJoueur(&joueur);
 		afficherPlateau(joueur.plateau);
-
 		int tuile;
-		sread(sockfd, &tuile, sizeof(int));
-		printf("la tuile est arrive a bon port %d \n",tuile);
+		bool encours=true;
+
+		while(encours){
+
+			sread(sockfd, &tuile, sizeof(int));
+			if (tuile==-1)
+			{
+				printf("Fin des tours\n");
+				encours=false;
+				break;
+			}
+
+			printf("La tuile a placée est la suite: %d \n",tuile);
+			
+			if(placerTuile(joueur.plateau,tuile)){
+				printf("Placement de la tuile reussit \n ");
+				afficherPlateau(joueur.plateau);
+			}
+			bool result = true;
+			swrite(sockfd,&result,sizeof(bool));
+		}
 		
-		printf("je place la tuile\n ");
-		bool result = true;
-		swrite(sockfd,&result,sizeof(bool));
 	}
 	else
 	{

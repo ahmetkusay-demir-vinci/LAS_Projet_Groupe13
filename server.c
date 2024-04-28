@@ -61,20 +61,34 @@ void childServerProcess(void *arg0, void *arg1, void *arg2)
 
 	while (encours)
 	{
+
 		int tuile;
 		sread(pipeEcritureDuPere[0], &tuile, sizeof(int));
 
-		printf("La tuile récupérée du serveur est %d \n", tuile);
+		if (tuile != -1)
+		{
+			printf("La tuile récupérée du serveur est %d \n", tuile);
+		}
 		swrite(socketPlayer, &tuile, sizeof(int));
 
-		bool reponse;
-		sread(socketPlayer, &reponse, sizeof(bool));
 
-		printf(" La tuile a ete poser dans le plateau ! \n");
+		if(tuile!=-1){
+			bool reponse;
+			sread(socketPlayer, &reponse, sizeof(bool));
 
-		swrite(pipeEcritureDuFils[1], &reponse, sizeof(bool));
+			printf("La tuile a été posée dans le plateau ! \n");
 
-		encours = true;
+			swrite(pipeEcritureDuFils[1], &reponse, sizeof(bool));
+		}else{
+			encours=false;
+		}
+		
+
+		
+	}
+	encours=true;
+	while(encours){
+		
 	}
 
 	printf("c %d \n", pipeEcritureDuFils[0]);
@@ -200,40 +214,60 @@ int main(int argc, char const *argv[])
 		sclose(tablePipeEcritureDuFils[i][1]);
 	}
 
-	while (nbr_tours < 1)
-	{
-		int tuileTirer = tirerTuile(ensembleTuiles, &tailleLogiqueEnsemble);
+	int compteur;
+	int listeIndicesDejaRepondus[MAX_PLAYERS];
 
-		printf("la tuile pioché est %d \n", tuileTirer);
+	while (nbr_tours <= 3)
+	{
+		int tuileTirer;
+		if (nbr_tours == 3)
+		{
+			tuileTirer = -1;
+			printf("C'est la fin des tours \n");
+		}
+		else
+		{
+			tuileTirer = tirerTuile(ensembleTuiles, &tailleLogiqueEnsemble);
+
+			printf("la tuile pioché est %d \n", tuileTirer);
+		}
 
 		for (int i = 0; i < nbPlayers; i++)
 		{
 			swrite(tablePipeEcritureDuPere[i][1], &tuileTirer, sizeof(int));
 		}
+		compteur=0;
 
-		int compteur = 0;
-		int listeIndicesDejaRepondus[MAX_PLAYERS];
-		printf("attente des joueurs \n");
-
-		while (compteur <= nbPlayers)
-		{
-			ret = poll(fds, nbPlayers, 1000);
-			checkNeg(ret, "server poll error");
-
-			if (ret == 0)
-				continue;
-
-			for (int i = 0; i < nbPlayers; i++)
+		if(tuileTirer!=-1){
+			printf("attente des joueurs \n");
+		
+			while (compteur < nbPlayers)
 			{
-				if (!contientEntier(listeIndicesDejaRepondus, i, compteur) && fds[i].revents & POLLIN)
+				ret = poll(fds, nbPlayers, 1000);
+				checkNeg(ret, "server poll error");
+
+				if (ret == 0)
+					continue;
+
+				for (int i = 0; i < nbPlayers; i++)
 				{
-					listeIndicesDejaRepondus[compteur] = i;
-					compteur++;
-					printf("%d joueurs ont repondu\n", compteur);
-				}
+					if (!contientEntier(listeIndicesDejaRepondus, i, compteur) && fds[i].revents & POLLIN)
+					{
+						listeIndicesDejaRepondus[compteur] = i;
+						compteur++;
+						printf(" %d joueurs ont placer leur tuile \n", compteur);
+						fds[i].revents=0;
+					}
+					
+				}		
+			}
+			for (int i = 0; i < MAX_PLAYERS; i++)
+			{
+				listeIndicesDejaRepondus[i]=-1;
 			}
 		}
-
+		
+		
 		nbr_tours++;
 	}
 

@@ -11,6 +11,7 @@
 #define START_GAME 13
 #define CANCEL_GAME 14
 
+
 typedef struct Joueur
 {
 	char pseudo[MAX_PSEUDO];

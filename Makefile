@@ -20,7 +20,7 @@ client.o: client.c utils_v1.h structure.h network.h jeu.h
 network.o: network.c utils_v1.h structure.h 
 	$(CC) $(CCFLAGS) -c network.c
 
-jeu.o: jeu.c utils_v1.h structure.h
+jeu.o: jeu.c utils_v1.h structure.h 
 	$(CC) $(CCFLAGS) -c jeu.c
 
 utils_v1.o: utils_v1.c utils_v1.h
