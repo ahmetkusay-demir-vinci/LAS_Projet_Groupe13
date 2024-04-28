@@ -17,7 +17,7 @@
 #define TIME_INSCRIPTION 15
 
 volatile sig_atomic_t end_inscriptions = 0;
-volatile sig_atomic_t sigint_pressed = 0;
+//volatile sig_atomic_t sigint_pressed = 0;
 
 Joueur tabPlayers[MAX_PLAYERS];
 int nbPLayers = 0;
@@ -33,17 +33,17 @@ int tablePipeEcritureDuPere[4][2];
 int tablePipeEcritureDuFils[4][2];
 
 // création d'un masque (ensemble) pour les signaux
-sigset_t set;
+// sigset_t set;
 
 void endRegisterHandler(int sig)
 {
 	end_inscriptions = 1;
 }
 
-void sigintHandler(int sig)
+/*void sigintHandler(int sig)
 {
 	sigint_pressed = 1;
-}
+}*/
 
 void childServerProcess(void *arg0, void *arg1, void *arg2)
 {
@@ -53,19 +53,19 @@ void childServerProcess(void *arg0, void *arg1, void *arg2)
 
 	bool encours = true;
 
-	struct pollfd fdsPipe[MAX_PLAYERS * 2];
+	//struct pollfd fdsPipe[MAX_PLAYERS * 2];
 
 	// init poll
-	fdsPipe[0].fd = pipeEcritureDuPere[0];
-	fdsPipe[0].events = POLLIN;
+	//fdsPipe[0].fd = pipeEcritureDuPere[0];
+	//fdsPipe[0].events = POLLIN;
 
-	struct pollfd fdsSocket[MAX_PLAYERS];
+	//struct pollfd fdsSocket[MAX_PLAYERS];
 
 	// init poll
-	fdsSocket[0].fd = socketPlayer;
-	fdsSocket[0].events = POLLIN;
+	//fdsSocket[0].fd = socketPlayer;
+	//fdsSocket[0].events = POLLIN;
 
-	int ret;
+	//int ret;
 
 	sclose(pipeEcritureDuPere[1]);
 	sclose(pipeEcritureDuFils[0]);
@@ -73,7 +73,7 @@ void childServerProcess(void *arg0, void *arg1, void *arg2)
 	while (encours)
 	{
 
-		ret = poll(fdsPipe, MAX_PLAYERS, 1000);
+		/*ret = poll(fdsPipe, MAX_PLAYERS, 1000);
 		checkNeg(ret, "server poll error");
 
 		if (ret == 0)
@@ -104,7 +104,22 @@ void childServerProcess(void *arg0, void *arg1, void *arg2)
 			swrite(pipeEcritureDuFils[1], &reponse, sizeof(bool));
 		}
 
-		encours = false;
+		encours = false;*/
+
+		int tuile;
+        sread(pipeEcritureDuPere[0], &tuile, sizeof(int));
+
+        printf("La tuile récupérée dans le pro");
+        swrite(socketPlayer, &tuile, sizeof(int));
+
+        bool reponse;
+        sread(socketPlayer, &reponse, sizeof(bool));
+
+        printf(" La tuile a ete poser dans le plateau ! \n");
+
+        swrite(pipeEcritureDuFils[1], &reponse, sizeof(bool));
+
+        encours = false;
 	}
 
 	printf("c %d \n", pipeEcritureDuFils[0]);
@@ -127,12 +142,12 @@ int main(int argc, char const *argv[])
 	int ret;
 	struct pollfd fds[MAX_PLAYERS * 2];
 
-	ssigemptyset(&set);
-	ssigaddset(&set, SIGINT);
+	//ssigemptyset(&set);
+	//ssigaddset(&set, SIGINT);
 
 	// Gestionnaire pour SIGALRM
 	ssigaction(SIGALRM, endRegisterHandler);
-	ssigaction(SIGINT, sigintHandler);
+	// ssigaction(SIGINT, sigintHandler);
 
 	// Initialisation du socket serveur
 	sockfd = initSocketServeur(SERVER_PORT);
@@ -181,16 +196,16 @@ int main(int argc, char const *argv[])
 	}
 
 	printf("FIN DES INSCRIPTIONS\n");
-	if (nbPLayers < MIN_PLAYERS || sigint_pressed == 1)
+	if (nbPLayers < MIN_PLAYERS /*|| sigint_pressed == 1*/)
 	{
-		if (sigint_pressed == 1)
+		/*if (sigint_pressed == 1)
 		{
 			printf("PARTIE ANNULEE .. CTRL-C ÉFFECTUÉ \n");
 		}
 		else
 		{
 			printf("PARTIE ANNULEE .. PAS ASSEZ DE JOUEURS\n");
-		}
+		}*/
 
 		msg.code = CANCEL_GAME;
 
@@ -240,10 +255,18 @@ int main(int argc, char const *argv[])
 		{
 			swrite(tablePipeEcritureDuPere[i][1], &tuileTirer, sizeof(int));
 		}
+
 		int compteur = 0;
 
 		while (compteur <= MAX_PLAYERS)
 		{
+			// LEGRAND
+			ret = poll(fds, MAX_PLAYERS, 1000);
+            checkNeg(ret, "server poll error");
+
+            if (ret == 0)
+                continue;
+
 			if (fds[i].revents & POLLIN)
 			{
 				printf("%d joueurs ont repondu\n",compteur);
@@ -257,11 +280,11 @@ int main(int argc, char const *argv[])
 	// FIN DE PARTIE
 
 	// Déblocage des signaux (SIGINT)
-	sigprocmask(SIG_UNBLOCK, &set, NULL);
+	//sigprocmask(SIG_UNBLOCK, &set, NULL);
 
 	// on cloture les pipe
-	// sclose(tablePipeEcritureDuPere[i][1]);
-	// sclose(tablePipeEcritureDuFils[i][0]);
+	sclose(tablePipeEcritureDuPere[i][1]);
+	sclose(tablePipeEcritureDuFils[i][0]);
 
 	// GAME PART
 	int nbPlayersAlreadyPlayed = 0;
