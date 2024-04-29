@@ -4,12 +4,9 @@
 
 #include "jeu.h"
 
-// int ensembleTuile[NBR_MAX_TUILE];
-// creerEnsembleTuile(ensembleTuiles);
 
-// int scores[] = {0, 1, 3, 5, 7, 9, 11, 15, 20, 25, 30, 35, 40, 50, 60, 70, 85, 100, 150, 300};
-// int scoreTotal = 0;
-// calculerScore(plateau, scores, &scoreTotal);
+#define SCORES_SIZE 20
+const int SCORES[SCORES_SIZE] = {0, 1, 3, 5, 7, 9, 11, 15, 20, 25, 30, 35, 40, 50, 60, 70, 85, 100, 150, 300};
 
 void creerEnsembleTuiles(int *ensembleTuiles)
 {
@@ -93,25 +90,41 @@ bool placerTuile(int *plateau, int tuile)
     return true;
 }
 
-void calculerScore(const int *plateau, const int *scores, int *scoreTotal)
+int calculerScore(const int *plateau)
 {
     int longueurSuite = 1;
+    int scoreTotal = 0;
 
     for (int i = 1; i < NBR_MAX_TUILE_PAR_PLATEAU; i++)
     {
+        int tuilePrecedente;
+        int tuileSuivante;
+        if (plateau[i]==0)
+        {
+            int tuilePrecedente=plateau[i-1];
+            int tuileSuivante=plateau[i+1];
+            if (tuil)
+            {
+                /* code */
+            }
+            
+            
+        }
+        
         if (plateau[i] > plateau[i - 1])
         {
             longueurSuite++;
         }
         else
         {
-            *scoreTotal += scores[longueurSuite - 1]; // -1 car les indices commencent à 0
+            scoreTotal += SCORES[longueurSuite - 1]; // -1 car les indices commencent à 0
             longueurSuite = 1;
         }
     }
 
     // Ajouter le score de la dernière suite
-    *scoreTotal += scores[longueurSuite - 1]; // -1 car les indices commencent à 0
+    scoreTotal += SCORES[longueurSuite - 1]; // -1 car les indices commencent à 0
+    return scoreTotal;
 }
 
 void afficherPlateau(const int *plateau)

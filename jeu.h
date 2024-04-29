@@ -17,7 +17,7 @@ int tirerTuile(int* ensembleTuiles,int* tailleLogique);
 
 bool placerTuile(int* plateau,int tuile);
 
-void calculerScore(const int* plateau, const int* scores, int* scoreTotal);
+int calculerScore(const int* plateau);
 
 void afficherPlateau(const int* plateau);
 

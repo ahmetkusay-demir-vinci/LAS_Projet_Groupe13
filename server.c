@@ -89,7 +89,15 @@ void childServerProcess(void *arg0, void *arg1, void *arg2)
 	encours = true;
 
 	while (encours)
-	{
+	{	
+		int score;
+		sread(socketPlayer,&score,sizeof(int));
+		printf("Le score a été recu au niveau du serveur fils\n");
+
+		swrite(pipeEcritureDuFils[1],&score,sizeof(int));
+		printf("Envoie du score au serveur parent \n");
+
+		encours=false;
 		// mettre classement ici
 	}
 
@@ -273,12 +281,24 @@ int main(int argc, char const *argv[])
 			compteur += ret;
 		}
 
-		bool reponse;
+		int score;
 		for (int i = 0; i < nbPlayers; i++)
 		{
-			sread(tablePipeEcritureDuFils[i][0], &reponse, sizeof(bool));
-			printf("Le joueur %s a répondu %d \n", tabPlayers[i].pseudo, reponse);
+			sread(tablePipeEcritureDuFils[i][0], &score, sizeof(int));
+			ecrireScore(id_memoirePartagee,id_semaphore,score,i);
 		}
+
+		trierClassement(id_memoirePartagee,id_semaphore,nbPlayers);
+
+		Joueur copieClassement[MAX_PLAYERS];
+		lireClassement(id_memoirePartagee,id_semaphore,copieClassement,nbPlayers);
+		for (int i = 0; i < nbPlayers; i++)
+		{
+			printf("Position %d : Joueur => %s => score %d\n",i+1,copieClassement[i].pseudo,copieClassement[i].score);
+			//swrite(tablePipeEcritureDuPere[i][1],&copieClassement,sizeof(Joueur)*nbPlayers);
+		}
+		
+		encours=false;
 	}
 
 	// FIN DE JEU
