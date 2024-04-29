@@ -226,10 +226,10 @@ int main(int argc, char const *argv[])
 	int id_semaphore = creerSemaphore();
 	int compteur;
 
-	while (nbr_tours <= 3)
+	while (nbr_tours < 20)
 	{
 		int tuileTirer;
-		if (nbr_tours == 3)
+		if (nbr_tours == 19)
 		{
 			tuileTirer = -1;
 			printf("C'est la fin des tours \n");

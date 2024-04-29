@@ -75,8 +75,13 @@ int main(int argc, char **argv)
 				encours = false;
 				break;
 			}
-
-			printf("La tuile a placée est la suite: %d \n", tuile);
+			
+			if (tuile == 31)
+			{
+				printf("La tuile a placé est le joker\n");
+			} else {
+				printf("La tuile a placée est la suivante: %d \n", tuile);
+			}
 
 			if (placerTuile(joueur.plateau, tuile))
 			{

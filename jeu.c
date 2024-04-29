@@ -99,12 +99,12 @@ int calculerScore(const int *plateau)
         int tuilePrecedente = plateau[i - 1];
         int tuile = plateau[i];
 
-        if (tuile == 0)
+        if (tuile == 31)
         {
             tuile = tuilePrecedente + 1;
         }
 
-        if (tuilePrecedente == 0)
+        if (tuilePrecedente == 31)
         {
             tuilePrecedente = tuile - 1;
         }
@@ -132,16 +132,21 @@ int calculerScore(const int *plateau)
 void afficherPlateau(const int *plateau)
 {
     printf("Plateau du joueur :\n");
+    
     for (int i = 0; i < NBR_MAX_TUILE_PAR_PLATEAU; i++)
     {
         if (plateau[i] != 0)
         {
             printf("%d ", plateau[i]);
+        } else if(plateau[i] == 31)
+        {
+            printf("J ");
         }
         else
         {
             printf("- ");
         }           
     }
+
     printf("\n");
 }
