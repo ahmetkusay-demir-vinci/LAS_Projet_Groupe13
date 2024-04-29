@@ -285,7 +285,7 @@ int main(int argc, char const *argv[])
 		for (int i = 0; i < nbPlayers; i++)
 		{
 			sread(tablePipeEcritureDuFils[i][0], &score, sizeof(int));
-			ecrireScore(id_memoirePartagee,id_semaphore,score,i);
+			ecrireScore(id_memoirePartagee,id_semaphore,score, tabPlayers[i].pseudo, i);
 		}
 
 		printf("Classement final : \n");

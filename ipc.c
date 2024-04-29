@@ -6,7 +6,6 @@
 int creerClassement(Joueur* joueurs, int nbrJoueurs)
 {
     int shm_id = sshmget(KEY_MEMORY, sizeof(Joueur )*nbrJoueurs, IPC_CREAT | PERM);
-    return shm_id;
 
     Joueur* classement = sshmat(shm_id);
     printf("Mémoire partagée attachée !\n");
@@ -46,7 +45,7 @@ void ecrireScore(int shm_id, int sem_id, int score, char* pseudo, int index)
     Joueur* classement = sshmat(shm_id);
     sem_down(sem_id, 0);
 
-    classement[index] -> pseudo = pseudo;
+    strcpy(classement[index].pseudo, pseudo);
     classement[index].score = score;
 
     sem_up(sem_id, 0);
