@@ -1,34 +1,66 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "jeu.h"
 
 #define SCORES_SIZE 20
-const int SCORES[SCORES_SIZE] = {0, 1, 3, 5, 7, 9, 11, 15, 20, 25, 30, 35, 40, 50, 60, 70, 85, 100, 150, 300};
 
-void creerEnsembleTuiles(int *ensembleTuiles)
+const int SCORES[SCORES_SIZE] = {0, 1, 3, 5, 7, 9, 11, 15, 20, 25, 30, 35, 40, 50, 60, 70, 85, 100, 150, 300};
+int nbr_Partie = 0;
+
+void creerEnsembleTuiles(int *ensembleTuiles, bool presenceDUnFichier, char *nomDuFichier)
 {
-    // Création des tuiles numérotées de 1 à 30 (avec doublons pour 11-19) et un joker (31)
-    int index = 0;
-    for (int i = 1; i <= 30; i++)
+    if (presenceDUnFichier == false)
     {
-        ensembleTuiles[index++] = i;
-        if (i >= 11 && i <= 19)
+
+        // Création des tuiles numérotées de 1 à 30 (avec doublons pour 11-19) et un joker (31)
+        int index = 0;
+        for (int i = 1; i <= 30; i++)
         {
-            ensembleTuiles[index++] = i; // Doublon pour 11-19
+            ensembleTuiles[index++] = i;
+            if (i >= 11 && i <= 19)
+            {
+                ensembleTuiles[index++] = i; // Doublon pour 11-19
+            }
+        }
+        ensembleTuiles[index] = 31; // Joker
+
+        // Mélange des tuiles avec l'algorithme de Fisher-Yates
+        srand(time(NULL));
+        for (int i = NBR_MAX_TUILE - 1; i > 0; i--)
+        {
+            int j = rand() % (i + 1);
+            int temp = ensembleTuiles[i];
+            ensembleTuiles[i] = ensembleTuiles[j];
+            ensembleTuiles[j] = temp;
         }
     }
-    ensembleTuiles[index] = 31; // Joker
-
-    // Mélange des tuiles avec l'algorithme de Fisher-Yates
-    srand(time(NULL));
-    for (int i = NBR_MAX_TUILE - 1; i > 0; i--)
+    else
     {
-        int j = rand() % (i + 1);
-        int temp = ensembleTuiles[i];
-        ensembleTuiles[i] = ensembleTuiles[j];
-        ensembleTuiles[j] = temp;
+        int fd = sopen(nomDuFichier,O_RDONLY,0200); // O_RDWR pour lecture et écriture
+		
+        if (fd == -1)
+        {
+            perror("Erreur lors de l'ouverture du fichier");
+            exit(0);
+        }
+       
+        char **tableau = readFileToTable(fd);
+		
+        int indice = 0;
+       
+        for (int i = 20 * nbr_Partie + 19; i >= 20 * nbr_Partie; i--)
+        {
+            ensembleTuiles[indice] = atoi(tableau[i]);
+            indice++;
+        }
+        nbr_Partie++;
+
+        sclose(fd); // Fermeture du descripteur de fichier après utilisation
     }
 }
 
@@ -47,9 +79,10 @@ int tirerTuile(int *ensembleTuiles, int *tailleLogique)
     {
         return -1; // Si le nombre de tuiles est insuffisant
     }
-
-    // Tirage de la dernière tuile de l'ensemble
+        
+    // Tirage de la dernière tuile de l'ensemble    
     int tuile = ensembleTuiles[*tailleLogique - 1];
+
     (*tailleLogique)--;
 
     return tuile;
@@ -67,7 +100,6 @@ bool placerTuile(int *plateau, int tuile)
     }
 
     int position = atoi(resultat) - 1;
-    printf("\nposition choisi : %d", position);
 
     if (position < 0 || position >= NBR_MAX_TUILE_PAR_PLATEAU)
     {
@@ -108,14 +140,14 @@ int calculerScore(const int *plateau)
         {
             tuilePrecedente = tuile - 1;
         }
-        
+
         if (tuile > tuilePrecedente)
         {
             longueurSuite++;
         }
         else
         {
-            scoreTotal += SCORES[longueurSuite - 1]; // -1 car les indices commencent à 0
+            scoreTotal += SCORES[longueurSuite]; 
             longueurSuite = 0;
         }
     }
@@ -123,7 +155,7 @@ int calculerScore(const int *plateau)
     // Ajouter le score de la dernière suite
     if (longueurSuite > 0)
     {
-        scoreTotal += SCORES[longueurSuite - 1]; // -1 car les indices commencent à 0
+        scoreTotal += SCORES[longueurSuite]; 
     }
 
     return scoreTotal;
@@ -132,7 +164,7 @@ int calculerScore(const int *plateau)
 void afficherPlateau(const int *plateau)
 {
     printf("Plateau du joueur :\n");
-    
+
     for (int i = 0; i < NBR_MAX_TUILE_PAR_PLATEAU; i++)
     {
         if (plateau[i] != 0)
@@ -145,7 +177,7 @@ void afficherPlateau(const int *plateau)
         else
         {
             printf("- ");
-        }           
+        }
     }
 
     printf("\n");

@@ -72,28 +72,40 @@ int main(int argc, char **argv)
 			if (tuile == -1)
 			{
 				printf("Fin des tours\n");
+				
+				afficherPlateau(joueur.plateau);
+				
 				encours = false;
 				break;
 			}
-			
+
 			if (tuile == 31)
 			{
 				printf("La tuile a placé est le joker\n");
 			} else {
 				printf("La tuile a placée est la suivante: %d \n", tuile);
-			}
-
+			}		
 			if (placerTuile(joueur.plateau, tuile))
 			{
-				printf("Placement de la tuile reussit \n ");
+				printf("Placement de la tuile reussit\n ");
 				afficherPlateau(joueur.plateau);
 			}
+			
 			bool result = true;
 			swrite(socketPlayer, &result, sizeof(bool));
 		}
 		int scoreFinal = calculerScore(joueur.plateau);
 		printf("Vous avez obtenu un score de : %d \n", scoreFinal);
 		swrite(socketPlayer, &scoreFinal, sizeof(int));
+
+		Joueur copieClassementFinale[MAX_PLAYERS];
+		sread(socketPlayer,copieClassementFinale,sizeof(Joueur)*MAX_PLAYERS);
+		printf("Voici les resultats !!\n");
+		for (int i = 0; i < MAX_PLAYERS; i++)
+		{
+			printf("%d : Joueur => %s avec un score de %d points\n",i+1,copieClassementFinale[i].pseudo,copieClassementFinale[i].score);
+		}
+		
 	}
 	else
 	{

@@ -13,8 +13,7 @@
 #include "jeu.h"
 #include "ipc.h"
 
-#define MIN_PLAYERS 2
-#define MAX_PLAYERS 4
+
 #define TIME_INSCRIPTION 15
 
 volatile sig_atomic_t end_inscriptions = 0;
@@ -24,6 +23,8 @@ Joueur tabPlayers[MAX_PLAYERS];
 int nbPlayers = 0;
 int ensembleTuiles[NBR_MAX_TUILE];
 int nbr_tours = 0;
+int id_memoirePartagee = 0;
+int id_semaphore = 0;
 
 // creerEnsembleTuile(ensembleTuiles);
 // calculerScore(plateau, scores, &scoreTotal);
@@ -87,19 +88,26 @@ void childServerProcess(void *arg0, void *arg1, void *arg2)
 	encours = true;
 
 	while (encours)
-	{	
+	{
 		int score;
-		sread(socketPlayer,&score,sizeof(int));
+		sread(socketPlayer, &score, sizeof(int));
 		printf("Le score a été recu au niveau du serveur fils\n");
 
-		swrite(pipeEcritureDuFils[1],&score,sizeof(int));
+		swrite(pipeEcritureDuFils[1], &score, sizeof(int));
 		printf("Envoie du score au serveur parent \n");
 
-		encours=false;
+		Joueur copieClassement[MAX_PLAYERS];
+		sread(pipeEcritureDuPere[0],copieClassement,MAX_PLAYERS);
+		for (int i = 0; i < MAX_PLAYERS; i++)
+		{
+			printf("%s %d\n",copieClassement[i].pseudo,copieClassement[i].score);
+		}
+		
+		swrite(socketPlayer,copieClassement,sizeof(Joueur)*MAX_PLAYERS);
+
+		encours = false;
 		// mettre classement ici
 	}
-
-	printf("c %d \n", pipeEcritureDuFils[0]);
 
 	// on cloture les pipe a la fin
 	sclose(pipeEcritureDuPere[0]);
@@ -112,12 +120,13 @@ void createPipes(int i)
 	spipe(tablePipeEcritureDuFils[i]);
 }
 
-int main(int argc, char const *argv[])
+int main(int argc, char *argv[])
 {
 	int sockfd, newsockfd, i;
 	StructMessage msg;
 	int ret;
 	struct pollfd fds[MAX_PLAYERS * 2];
+	int tailleLogiqueEnsemble = NBR_MAX_TUILE;
 
 	// ssigemptyset(&set);
 	// ssigaddset(&set, SIGINT);
@@ -135,145 +144,149 @@ int main(int argc, char const *argv[])
 	// INSCRIPTION PART
 	alarm(TIME_INSCRIPTION);
 
-	while (!end_inscriptions)
-	{
-		/* client trt */
-		newsockfd = accept(sockfd, NULL, NULL); // saccept() exit le programme si accept a été interrompu par l'alarme
-		if (newsockfd > 0)						/* no error on accept */
+
+		while (!end_inscriptions)
 		{
-
-			ret = sread(newsockfd, &msg, sizeof(msg));
-
-			if (msg.code == INSCRIPTION_REQUEST)
+			/* client trt */
+			newsockfd = accept(sockfd, NULL, NULL); // saccept() exit le programme si accept a été interrompu par l'alarme
+			if (newsockfd > 0)						/* no error on accept */
 			{
-				printf("Inscription demandée par le joueur : %s\n", msg.messageText);
 
-				strcpy(tabPlayers[i].pseudo, msg.messageText);
-				tabPlayers[i].sockfd = newsockfd;
-				i++;
+				ret = sread(newsockfd, &msg, sizeof(msg));
 
-				if (nbPlayers < MAX_PLAYERS)
+				if (msg.code == INSCRIPTION_REQUEST)
 				{
-					msg.code = INSCRIPTION_OK;
-					nbPlayers++;
-					if (nbPlayers == MAX_PLAYERS)
+					printf("Inscription demandée par le joueur : %s\n", msg.messageText);
+
+					strcpy(tabPlayers[i].pseudo, msg.messageText);
+					tabPlayers[i].sockfd = newsockfd;
+					i++;
+
+					if (nbPlayers < MAX_PLAYERS)
 					{
-						alarm(0); // cancel alarm
-						end_inscriptions = 1;
+						msg.code = INSCRIPTION_OK;
+						nbPlayers++;
+						if (nbPlayers == MAX_PLAYERS)
+						{
+							alarm(0); // cancel alarm
+							end_inscriptions = 1;
+						}
 					}
+					else
+					{
+						msg.code = INSCRIPTION_KO;
+					}
+					ret = swrite(newsockfd, &msg, sizeof(msg));
+					printf("Nb Inscriptions : %i\n", nbPlayers);
 				}
-				else
-				{
-					msg.code = INSCRIPTION_KO;
-				}
-				ret = swrite(newsockfd, &msg, sizeof(msg));
-				printf("Nb Inscriptions : %i\n", nbPlayers);
 			}
 		}
-	}
 
-	printf("FIN DES INSCRIPTIONS\n");
-	if (nbPlayers < MIN_PLAYERS /*|| sigint_pressed == 1*/)
-	{
-		/*if (sigint_pressed == 1)
+		printf("FIN DES INSCRIPTIONS\n\n");
+		if (nbPlayers < MIN_PLAYERS /*|| sigint_pressed == 1*/)
 		{
-			printf("PARTIE ANNULEE .. CTRL-C ÉFFECTUÉ \n");
+			/*if (sigint_pressed == 1)
+			{
+				printf("PARTIE ANNULEE .. CTRL-C ÉFFECTUÉ \n");
+			}
+			else
+			{
+				printf("PARTIE ANNULEE .. PAS ASSEZ DE JOUEURS\n");
+			}*/
+
+			msg.code = CANCEL_GAME;
+
+			for (i = 0; i < nbPlayers; i++)
+			{
+				swrite(tabPlayers[i].sockfd, &msg, sizeof(msg));
+			}
+
+			deconnecterJoueur(tabPlayers, nbPlayers);
+			sclose(sockfd);
+			exit(0);
 		}
-		else
-		{
-			printf("PARTIE ANNULEE .. PAS ASSEZ DE JOUEURS\n");
-		}*/
 
-		msg.code = CANCEL_GAME;
+		// Blocage des signaux (SIGINT)
+		// sigprocmask(SIG_BLOCK, &set, NULL);
+
+		printf("PARTIE VA DEMARRER ... \n");
+		msg.code = START_GAME;
 
 		for (i = 0; i < nbPlayers; i++)
 		{
+			swrite(tabPlayers[i].sockfd, &tabPlayers[i], sizeof(Joueur));
 			swrite(tabPlayers[i].sockfd, &msg, sizeof(msg));
 		}
+		bool presenceDUnFichier = false;
 
-		deconnecterJoueur(tabPlayers, nbPlayers);
-		sclose(sockfd);
-		exit(0);
-	}
-
-	// Blocage des signaux (SIGINT)
-	// sigprocmask(SIG_BLOCK, &set, NULL);
-
-	printf("PARTIE VA DEMARRER ... \n");
-	msg.code = START_GAME;
-
-	for (i = 0; i < nbPlayers; i++)
-	{
-		swrite(tabPlayers[i].sockfd, &tabPlayers[i], sizeof(Joueur));
-		swrite(tabPlayers[i].sockfd, &msg, sizeof(msg));
-	}
-
-	creerEnsembleTuiles(ensembleTuiles);
-	int tailleLogiqueEnsemble = NBR_MAX_TUILE;
-
-	// Création des processus fils pour servir les clients
-	for (int i = 0; i < nbPlayers; i++)
-	{
-		createPipes(i);
-		fds[i].fd = tablePipeEcritureDuFils[i][0];
-		fds[i].events = POLLIN;
-		fork_and_run3(childServerProcess, &(tabPlayers[i].sockfd), &tablePipeEcritureDuPere[i], &tablePipeEcritureDuFils[i]);
-		sclose(tablePipeEcritureDuPere[i][0]);
-		sclose(tablePipeEcritureDuFils[i][1]);
-	}
-
-	int id_memoirePartagee = creerClassement(tabPlayers, nbPlayers);
-	int id_semaphore = creerSemaphore();
-	int compteur;
-
-	while (nbr_tours < 20)
-	{
-		int tuileTirer;
-		if (nbr_tours == 19)
+		char *nomDuFichier = argv[1];
+		if (argc == 2)
 		{
-			tuileTirer = -1;
-			printf("C'est la fin des tours \n");
-		}
-		else
-		{
-			tuileTirer = tirerTuile(ensembleTuiles, &tailleLogiqueEnsemble);
-
-			printf("la tuile pioché est %d \n", tuileTirer);
+			presenceDUnFichier = true;
+			tailleLogiqueEnsemble = NBR_MAX_TUILE_PAR_PLATEAU;
 		}
 
+		creerEnsembleTuiles(ensembleTuiles, presenceDUnFichier, nomDuFichier);
+
+		// Création des processus fils pour servir les clients
 		for (int i = 0; i < nbPlayers; i++)
 		{
-			swrite(tablePipeEcritureDuPere[i][1], &tuileTirer, sizeof(int));
+			createPipes(i);
+			fds[i].fd = tablePipeEcritureDuFils[i][0];
+			fds[i].events = POLLIN;
+			fork_and_run3(childServerProcess, &(tabPlayers[i].sockfd), &tablePipeEcritureDuPere[i], &tablePipeEcritureDuFils[i]);
+			sclose(tablePipeEcritureDuPere[i][0]);
+			sclose(tablePipeEcritureDuFils[i][1]);
 		}
-		compteur = 0;
 
-		if (tuileTirer != -1)
+		id_memoirePartagee = creerClassement(tabPlayers, nbPlayers);
+		id_semaphore = creerSemaphore();
+		int compteur;
+
+		while (nbr_tours <= 2)
 		{
-			printf("attente des joueurs \n");
-
-			while (compteur < nbPlayers)
+			int tuileTirer;
+			if (nbr_tours == 2)
 			{
-				ret = spoll(fds, nbPlayers, 1000);
-				compteur += ret;
+				tuileTirer = -1;
+				printf("C'est la fin des tours \n");
+			}
+			else
+			{
+				tuileTirer = tirerTuile(ensembleTuiles, &tailleLogiqueEnsemble);
+
+				printf("la tuile pioché est %d \n", tuileTirer);
 			}
 
-			bool reponse;
 			for (int i = 0; i < nbPlayers; i++)
 			{
-				sread(tablePipeEcritureDuFils[i][0], &reponse, sizeof(bool));
-				printf("Le joueur %s a répondu %d \n", tabPlayers[i].pseudo, reponse);
+				swrite(tablePipeEcritureDuPere[i][1], &tuileTirer, sizeof(int));
 			}
+			compteur = 0;
+
+			if (tuileTirer != -1)
+			{
+
+				printf("\nAttente des joueurs \n");
+
+				while (compteur < nbPlayers)
+				{
+					ret = spoll(fds, nbPlayers, 1000);
+					compteur += ret;
+				}
+
+				bool reponse;
+				for (int i = 0; i < nbPlayers; i++)
+				{
+					sread(tablePipeEcritureDuFils[i][0], &reponse, sizeof(bool));
+					printf("Le joueur %s a répondu %d \n", tabPlayers[i].pseudo, reponse);
+				}
+			}
+
+			nbr_tours++;
 		}
 
-		nbr_tours++;
-	}
-
-	// LECTURE DU CLASSEMENT
-
-	bool encours = true;
-
-	while (encours)
-	{
+		// LECTURE DU CLASSEMENT
 		while (compteur < nbPlayers)
 		{
 			ret = spoll(fds, nbPlayers, 1000);
@@ -285,32 +298,34 @@ int main(int argc, char const *argv[])
 		for (int i = 0; i < nbPlayers; i++)
 		{
 			sread(tablePipeEcritureDuFils[i][0], &score, sizeof(int));
-			ecrireScore(id_memoirePartagee,id_semaphore,score, tabPlayers[i].pseudo, i);
+			ecrireScore(id_memoirePartagee, id_semaphore, score, tabPlayers[i].pseudo, i);
 		}
 
 		printf("Classement final : \n");
-		trierClassement(id_memoirePartagee,id_semaphore,nbPlayers);
+		// trierClassement(id_memoirePartagee,id_semaphore,nbPlayers);
 
 		Joueur copieClassement[MAX_PLAYERS];
-		lireClassement(id_memoirePartagee,id_semaphore,copieClassement,nbPlayers);
+		lireClassement(id_memoirePartagee, id_semaphore, copieClassement, nbPlayers);
 
 		for (int i = 0; i < nbPlayers; i++)
 		{
-			printf("Position %d : Joueur => %s => score %d\n",i+1,copieClassement[i].pseudo,copieClassement[i].score);
-			//swrite(tablePipeEcritureDuPere[i][1],&copieClassement,sizeof(Joueur)*nbPlayers);
+			printf("Position %d : Joueur => %s => score %d\n", i + 1, copieClassement[i].pseudo, copieClassement[i].score);
+			swrite(tablePipeEcritureDuPere[i][1],&copieClassement,sizeof(Joueur)*nbPlayers);
 		}
-		
-		encours=false;
-	}
-
+	
+		end_inscriptions = 0;
+	
 	// FIN DE JEU
 
 	// Déblocage des signaux (SIGINT)
 	// sigprocmask(SIG_UNBLOCK, &set, NULL);
 
 	// on cloture les pipe
-	sclose(tablePipeEcritureDuPere[i][1]);
-	sclose(tablePipeEcritureDuFils[i][0]);
+	for (int i = 0; i < nbPlayers; i++)
+	{
+		sclose(tablePipeEcritureDuPere[i][1]);
+		sclose(tablePipeEcritureDuFils[i][0]);
+	}
 
 	deconnecterJoueur(tabPlayers, nbPlayers);
 	sclose(sockfd);

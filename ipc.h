@@ -1,7 +1,7 @@
 #ifndef _IPC_H_
 #define _IPC_H_
 
-#define KEY_MEMORY 114
+#define KEY_MEMORY 119
 #define KEY_SEMAPHORE 112
 #define PERM 0600
 #define NSEM 1

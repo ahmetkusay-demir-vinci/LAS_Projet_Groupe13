@@ -5,12 +5,14 @@
 
 int creerClassement(Joueur* joueurs, int nbrJoueurs)
 {
-    int shm_id = sshmget(KEY_MEMORY, sizeof(Joueur )*nbrJoueurs, IPC_CREAT | PERM);
+    int shm_id = sshmget(KEY_MEMORY, sizeof(Joueur)*4, IPC_CREAT | PERM); //remettre nbrJoueurs à la place de 4 en fin de programme
+    
+    printf("Nombre de joueurs : %d \n", nbrJoueurs);
 
     Joueur* classement = sshmat(shm_id);
     printf("Mémoire partagée attachée !\n");
 
-    memcpy(classement, &joueurs, sizeof(Joueur)*nbrJoueurs);
+    memcpy(classement, &joueurs, sizeof(Joueur)*4); //remettre nbrJoueurs à la place de 4 en fin de programme
     printf("Classement initialisé avec succès !\n");
 
     sshmdt(classement);
@@ -27,7 +29,7 @@ void trierClassement(int shm_id, int sem_id, int nbrJoueurs)
     {
         for (int j = i + 1; j < nbrJoueurs; j++)
         {
-            if (classement[j] != NULL && classement[i] != NULL && classement[j]->score > classement[i]->score)
+            if (classement[j] != NULL && classement[i] != NULL && classement[j]->score < classement[i]->score)
             {
                 Joueur *temp = classement[i];
                 classement[i] = classement[j];
@@ -38,6 +40,7 @@ void trierClassement(int shm_id, int sem_id, int nbrJoueurs)
 
     sem_up(sem_id, 0);
     sshmdt(classement);
+    
 }
 
 void ecrireScore(int shm_id, int sem_id, int score, char* pseudo, int index)
@@ -45,7 +48,7 @@ void ecrireScore(int shm_id, int sem_id, int score, char* pseudo, int index)
     Joueur* classement = sshmat(shm_id);
     sem_down(sem_id, 0);
 
-    strcpy(classement[index].pseudo, pseudo);
+    strcpy(classement[index].pseudo,pseudo);
     classement[index].score = score;
 
     sem_up(sem_id, 0);
@@ -57,11 +60,8 @@ void lireClassement(int shm_id, int sem_id, Joueur* copieClassement, int nbrJoue
     sem_down(sem_id, 0);
     
     memcpy(copieClassement, classement, sizeof(Joueur)*nbrJoueurs);
-
-    for (int i = 0; i < nbrJoueurs; i++)
-    {
-        printf("Joueur %d : %s\n", i, classement[i].pseudo);
-    }
+    
+    
 
     sem_up(sem_id, 0);
     sshmdt(classement);
