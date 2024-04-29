@@ -37,18 +37,20 @@ int ecrireClassement(int shm_id, int nbJoueurs)
     return 0;
 }
 
-// Ajouter par moi (kusay)
+// Ajouter par moi (kusay) - Pour la mémoire partagée
 int supprimerClassement(int shm_id)
 {
     shmdelete(shm_id);
+    printf("Classement supprimé avec succès !\n");
 }
 
 int creerSemaphore(key_t key,int nsems,int perm,int val){
     int sem_id = sem_create(KEY_SEMAPHORE,NSEM,PERM,VAL);
-    
+    printf("Ensemble de sémaphores initialisé avec succès !\n");
     return sem_id;
 }
 
 void supprimerSemaphore(int sem_id){
     sem_delete(sem_id);
+    printf("Sémaphores détruits avec succès !\n");
 }
