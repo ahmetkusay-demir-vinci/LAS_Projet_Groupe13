@@ -18,7 +18,7 @@ int creerClassement(Joueur* joueurs, int nbrJoueurs);
 
 void trierClassement(int shm_id, int sem_id, int nbrJoueurs);
 
-void ecrireScore(int shm_id, int sem_id, int score, int index);
+void ecrireScore(int shm_id, int sem_id, int score, char* pseudo, int index);
 
 void lireClassement(int shm_id, int sem_id, Joueur* copieClassement, int nbrJoueurs);
 

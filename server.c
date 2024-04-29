@@ -23,13 +23,11 @@ volatile sig_atomic_t end_inscriptions = 0;
 Joueur tabPlayers[MAX_PLAYERS];
 int nbPlayers = 0;
 int ensembleTuiles[NBR_MAX_TUILE];
-// creerEnsembleTuile(ensembleTuiles);
-
-int scores[] = {0, 1, 3, 5, 7, 9, 11, 15, 20, 25, 30, 35, 40, 50, 60, 70, 85, 100, 150, 300};
-int scoreTotal = 0;
 int nbr_tours = 0;
 
+// creerEnsembleTuile(ensembleTuiles);
 // calculerScore(plateau, scores, &scoreTotal);
+
 int tablePipeEcritureDuPere[4][2];
 int tablePipeEcritureDuFils[4][2];
 
@@ -273,6 +271,7 @@ int main(int argc, char const *argv[])
 	// LECTURE DU CLASSEMENT
 
 	bool encours = true;
+
 	while (encours)
 	{
 		while (compteur < nbPlayers)
@@ -282,16 +281,19 @@ int main(int argc, char const *argv[])
 		}
 
 		int score;
+
 		for (int i = 0; i < nbPlayers; i++)
 		{
 			sread(tablePipeEcritureDuFils[i][0], &score, sizeof(int));
 			ecrireScore(id_memoirePartagee,id_semaphore,score,i);
 		}
 
+		printf("Classement final : \n");
 		trierClassement(id_memoirePartagee,id_semaphore,nbPlayers);
 
 		Joueur copieClassement[MAX_PLAYERS];
 		lireClassement(id_memoirePartagee,id_semaphore,copieClassement,nbPlayers);
+
 		for (int i = 0; i < nbPlayers; i++)
 		{
 			printf("Position %d : Joueur => %s => score %d\n",i+1,copieClassement[i].pseudo,copieClassement[i].score);

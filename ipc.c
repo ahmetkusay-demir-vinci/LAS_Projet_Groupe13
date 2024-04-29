@@ -22,13 +22,13 @@ int creerClassement(Joueur* joueurs, int nbrJoueurs)
 void trierClassement(int shm_id, int sem_id, int nbrJoueurs)
 {   
     Joueur** classement = sshmat(shm_id);
-    sem_down(sem_id, 1);
+    sem_down(sem_id, 0);
 
     for (int i = 0; i < nbrJoueurs - 1; i++)
     {
         for (int j = i + 1; j < nbrJoueurs; j++)
         {
-            if (classement[j]->score > classement[i]->score)
+            if (classement[j] != NULL && classement[i] != NULL && classement[j]->score > classement[i]->score)
             {
                 Joueur *temp = classement[i];
                 classement[i] = classement[j];
@@ -37,28 +37,34 @@ void trierClassement(int shm_id, int sem_id, int nbrJoueurs)
         }
     }
 
-    sem_up(shm_id, 1);
+    sem_up(sem_id, 0);
     sshmdt(classement);
 }
 
-void ecrireScore(int shm_id, int sem_id, int score, int index)
+void ecrireScore(int shm_id, int sem_id, int score, char* pseudo, int index)
 {
     Joueur* classement = sshmat(shm_id);
-    sem_down(sem_id, 1);
+    sem_down(sem_id, 0);
 
+    classement[index] -> pseudo = pseudo;
     classement[index].score = score;
 
-    sem_up(sem_id, 1);
+    sem_up(sem_id, 0);
     sshmdt(classement);
 }
 
 void lireClassement(int shm_id, int sem_id, Joueur* copieClassement, int nbrJoueurs) {
     Joueur* classement = sshmat(shm_id);
-    sem_down(sem_id, 1);
+    sem_down(sem_id, 0);
     
     memcpy(copieClassement, classement, sizeof(Joueur)*nbrJoueurs);
 
-    sem_up(sem_id, 1);
+    for (int i = 0; i < nbrJoueurs; i++)
+    {
+        printf("Joueur %d : %s\n", i, classement[i].pseudo);
+    }
+
+    sem_up(sem_id, 0);
     sshmdt(classement);
 }
 

@@ -4,7 +4,6 @@
 
 #include "jeu.h"
 
-
 #define SCORES_SIZE 20
 const int SCORES[SCORES_SIZE] = {0, 1, 3, 5, 7, 9, 11, 15, 20, 25, 30, 35, 40, 50, 60, 70, 85, 100, 150, 300};
 
@@ -67,7 +66,7 @@ bool placerTuile(int *plateau, int tuile)
         return false;
     }
 
-    int position = atoi(resultat)-1;
+    int position = atoi(resultat) - 1;
     printf("\nposition choisi : %d", position);
 
     if (position < 0 || position >= NBR_MAX_TUILE_PAR_PLATEAU)
@@ -92,38 +91,41 @@ bool placerTuile(int *plateau, int tuile)
 
 int calculerScore(const int *plateau)
 {
-    int longueurSuite = 1;
+    int longueurSuite = 0;
     int scoreTotal = 0;
 
     for (int i = 1; i < NBR_MAX_TUILE_PAR_PLATEAU; i++)
     {
-        int tuilePrecedente;
-        int tuileSuivante;
-        if (plateau[i]==0)
+        int tuilePrecedente = plateau[i - 1];
+        int tuile = plateau[i];
+
+        if (tuile == 0)
         {
-            int tuilePrecedente=plateau[i-1];
-            int tuileSuivante=plateau[i+1];
-            if (tuil)
-            {
-                /* code */
-            }
-            
-            
+            tuile = tuilePrecedente + 1;
+        }
+
+        if (tuilePrecedente == 0)
+        {
+            tuilePrecedente = tuile - 1;
         }
         
-        if (plateau[i] > plateau[i - 1])
+        if (tuile > tuilePrecedente)
         {
             longueurSuite++;
         }
         else
         {
             scoreTotal += SCORES[longueurSuite - 1]; // -1 car les indices commencent à 0
-            longueurSuite = 1;
+            longueurSuite = 0;
         }
     }
 
     // Ajouter le score de la dernière suite
-    scoreTotal += SCORES[longueurSuite - 1]; // -1 car les indices commencent à 0
+    if (longueurSuite > 0)
+    {
+        scoreTotal += SCORES[longueurSuite - 1]; // -1 car les indices commencent à 0
+    }
+
     return scoreTotal;
 }
 
@@ -139,7 +141,7 @@ void afficherPlateau(const int *plateau)
         else
         {
             printf("- ");
-        }
+        }           
     }
     printf("\n");
 }
