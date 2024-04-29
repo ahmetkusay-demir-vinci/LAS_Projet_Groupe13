@@ -9,19 +9,22 @@
 
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <string.h>
 #include "structure.h"
 #include "utils_v1.h"
 
 //permet de créer la mémoire partagé
-int creerClassement(int nbrJoueurs);
+int creerClassement(Joueur* joueurs, int nbrJoueurs);
 
-void lireClassement(int shm_id, int nbrJoueurs);
+void trierClassement(int shm_id, int sem_id, int nbrJoueurs);
 
-int ecrireClassement(int shm_id, int nbrJoueurs);
+void ecrireScore(int shm_id, int sem_id, int score, int index);
+
+void lireClassement(int shm_id, int sem_id, Joueur* copieClassement, int nbrJoueurs);
 
 void supprimerClassement(int shm_id);
 
-int creerSemaphore(key_t key,int nsems,int perm,int val);
+int creerSemaphore();
 
 void supprimerSemaphore(int sem_id);
 

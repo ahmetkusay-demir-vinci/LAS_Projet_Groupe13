@@ -3,48 +3,73 @@
 
 #include "ipc.h"
 
-int creerClassement(int nbrJoueurs)
+int creerClassement(Joueur* joueurs, int nbrJoueurs)
 {
-    int shm_id = sshmget(KEY_MEMORY, sizeof(Joueur )* nbrJoueurs, IPC_CREAT | PERM);
+    int shm_id = sshmget(KEY_MEMORY, sizeof(Joueur )*nbrJoueurs, IPC_CREAT | PERM);
+    return shm_id;
+
+    Joueur* classement = sshmat(shm_id);
+    printf("Mémoire partagée attachée !\n");
+
+    memcpy(classement, &joueurs, sizeof(Joueur)*nbrJoueurs);
+    printf("Classement initialisé avec succès !\n");
+
+    sshmdt(classement);
+    printf("Mémoire partagée détachée !\n");
     return shm_id;
 }
 
-void lireClassement(int shm_id, int nbrJoueurs)
+void trierClassement(int shm_id, int sem_id, int nbrJoueurs)
+{   
+    Joueur** classement = sshmat(shm_id);
+    sem_down(sem_id, 1);
+
+    for (int i = 0; i < nbrJoueurs - 1; i++)
+    {
+        for (int j = i + 1; j < nbrJoueurs; j++)
+        {
+            if (classement[j]->score > classement[i]->score)
+            {
+                Joueur *temp = classement[i];
+                classement[i] = classement[j];
+                classement[j] = temp;
+            }
+        }
+    }
+
+    sem_up(shm_id, 1);
+    sshmdt(classement);
+}
+
+void ecrireScore(int shm_id, int sem_id, int score, int index)
 {
     Joueur* classement = sshmat(shm_id);
+    sem_down(sem_id, 1);
+
+    classement[index].score = score;
+
+    sem_up(sem_id, 1);
+    sshmdt(classement);
+}
+
+void lireClassement(int shm_id, int sem_id, Joueur* copieClassement, int nbrJoueurs) {
+    Joueur* classement = sshmat(shm_id);
+    sem_down(sem_id, 1);
     
-    for (int i = 0; i < nbrJoueurs; i++) 
-    {
-        printf("%d : Joueur %s : %d\n", i+1, classement[i].pseudo, classement[i].score);
-    }
+    memcpy(copieClassement, classement, sizeof(Joueur)*nbrJoueurs);
 
+    sem_up(sem_id, 1);
     sshmdt(classement);
 }
 
-int ecrireClassement(int shm_id, int nbJoueurs)
-{
-    Joueur* classement = sshmat(shm_id);
-
-    for (int i = 0; i < nbJoueurs; i++)
-    {
-        //mettre à jour le classement ici
-        //printf("Joueur %s : %s\n", classement[i].nom, classement[i].score);
-    }
-    // mettre un down ici pour le semaphore
-    // sem_down(sem_id);
-
-    sshmdt(classement);
-    return 0;
-}
-
-// Ajouter par moi (kusay) - Pour la mémoire partagée
+//Pour la mémoire Partagée
 void supprimerClassement(int shm_id)
 {
     sshmdelete(shm_id);
     printf("Classement supprimé avec succès !\n");
 }
 
-int creerSemaphore(key_t key,int nsems,int perm,int val){
+int creerSemaphore(){
     int sem_id = sem_create(KEY_SEMAPHORE,NSEM,PERM,VAL);
     printf("Ensemble de sémaphores initialisé avec succès !\n");
     return sem_id;

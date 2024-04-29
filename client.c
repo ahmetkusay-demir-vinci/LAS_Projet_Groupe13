@@ -84,7 +84,6 @@ int main(int argc, char **argv)
 			bool result = true;
 			swrite(sockfd,&result,sizeof(bool));
 		}
-		
 	}
 	else
 	{

@@ -39,7 +39,6 @@ int tablePipeEcritureDuFils[4][2];
 // Initialisation des fonctions
 // bool contientEntier(int *tableau, int element, int tailleLogique);
 
-
 void endRegisterHandler(int sig)
 {
 	end_inscriptions = 1;
@@ -63,7 +62,6 @@ void childServerProcess(void *arg0, void *arg1, void *arg2)
 
 	while (encours)
 	{
-
 		int tuile;
 		sread(pipeEcritureDuPere[0], &tuile, sizeof(int));
 
@@ -73,24 +71,26 @@ void childServerProcess(void *arg0, void *arg1, void *arg2)
 		}
 		swrite(socketPlayer, &tuile, sizeof(int));
 
-
-		if(tuile!=-1){
+		if (tuile != -1)
+		{
 			bool reponse;
 			sread(socketPlayer, &reponse, sizeof(bool));
 
 			printf("La tuile a été posée dans le plateau ! \n");
 
 			swrite(pipeEcritureDuFils[1], &reponse, sizeof(bool));
-		}else{
-			encours=false;
 		}
-		
-
-		
+		else
+		{
+			encours = false;
+		}
 	}
-	encours=true;
-	while(encours){
-		
+
+	encours = true;
+
+	while (encours)
+	{
+		// mettre classement ici
 	}
 
 	printf("c %d \n", pipeEcritureDuFils[0]);
@@ -216,6 +216,8 @@ int main(int argc, char const *argv[])
 		sclose(tablePipeEcritureDuFils[i][1]);
 	}
 
+	int id_memoirePartagee = creerClassement(tabPlayers, nbPlayers);
+	int id_semaphore = creerSemaphore();
 	int compteur;
 
 	while (nbr_tours <= 3)
@@ -237,9 +239,10 @@ int main(int argc, char const *argv[])
 		{
 			swrite(tablePipeEcritureDuPere[i][1], &tuileTirer, sizeof(int));
 		}
-		compteur=0;
+		compteur = 0;
 
-		if(tuileTirer!=-1){
+		if (tuileTirer != -1)
+		{
 			printf("attente des joueurs \n");
 
 			while (compteur < nbPlayers)
@@ -255,11 +258,30 @@ int main(int argc, char const *argv[])
 				printf("Le joueur %s a répondu %d \n", tabPlayers[i].pseudo, reponse);
 			}
 		}
-		
+
 		nbr_tours++;
 	}
 
-	// FIN DE PARTIE
+	// LECTURE DU CLASSEMENT
+
+	bool encours = true;
+	while (encours)
+	{
+		while (compteur < nbPlayers)
+		{
+			ret = spoll(fds, nbPlayers, 1000);
+			compteur += ret;
+		}
+
+		bool reponse;
+		for (int i = 0; i < nbPlayers; i++)
+		{
+			sread(tablePipeEcritureDuFils[i][0], &reponse, sizeof(bool));
+			printf("Le joueur %s a répondu %d \n", tabPlayers[i].pseudo, reponse);
+		}
+	}
+
+	// FIN DE JEU
 
 	// Déblocage des signaux (SIGINT)
 	// sigprocmask(SIG_UNBLOCK, &set, NULL);
