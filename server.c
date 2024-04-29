@@ -215,7 +215,6 @@ int main(int argc, char const *argv[])
 	}
 
 	int compteur;
-	int listeIndicesDejaRepondus[MAX_PLAYERS];
 
 	while (nbr_tours <= 3)
 	{
@@ -240,33 +239,20 @@ int main(int argc, char const *argv[])
 
 		if(tuileTirer!=-1){
 			printf("attente des joueurs \n");
-		
+
 			while (compteur < nbPlayers)
 			{
-				ret = poll(fds, nbPlayers, 1000);
-				checkNeg(ret, "server poll error");
-
-				if (ret == 0)
-					continue;
-
-				for (int i = 0; i < nbPlayers; i++)
-				{
-					if (!contientEntier(listeIndicesDejaRepondus, i, compteur) && fds[i].revents & POLLIN)
-					{
-						listeIndicesDejaRepondus[compteur] = i;
-						compteur++;
-						printf(" %d joueurs ont placer leur tuile \n", compteur);
-						fds[i].revents=0;
-					}
-					
-				}		
+				ret = spoll(fds, nbPlayers, 1000);
+				compteur += ret;
 			}
-			for (int i = 0; i < MAX_PLAYERS; i++)
+
+			bool reponse;
+			for (int i = 0; i < nbPlayers; i++)
 			{
-				listeIndicesDejaRepondus[i]=-1;
+				sread(tablePipeEcritureDuFils[i][0], &reponse, sizeof(bool));
+				printf("Le joueur %s a répondu %d \n", tabPlayers[i].pseudo, reponse);
 			}
 		}
-		
 		
 		nbr_tours++;
 	}
@@ -285,7 +271,7 @@ int main(int argc, char const *argv[])
 	return 0;
 }
 
-bool contientEntier(int *tableau, int element, int tailleLogique)
+/*bool contientEntier(int *tableau, int element, int tailleLogique)
 {
 	bool resultat = false;
 
@@ -299,4 +285,4 @@ bool contientEntier(int *tableau, int element, int tailleLogique)
 	}
 
 	return resultat;
-}
+}*/

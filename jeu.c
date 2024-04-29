@@ -62,9 +62,9 @@ int tirerTuile(int *ensembleTuiles, int *tailleLogique)
 bool placerTuile(int *plateau, int tuile)
 {
 
-    char resultat[3];
+    char resultat[4]; // 2 chiffres + \n + \0
     printf("Veuillez introduire la position souhaitée :\n");
-    int ret = readLimitedLine(resultat, 3);
+    int ret = readLimitedLine(resultat, 4);
     if (ret == -1)
     {
         return false;
