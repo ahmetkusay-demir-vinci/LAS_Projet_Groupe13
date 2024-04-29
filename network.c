@@ -12,7 +12,8 @@
 #define SERVER_PORT 9555
 #define BACKLOG 10
 
-int initSocketServeur(int port) {
+int initSocketServeur(int port)
+{
     int sockfd = ssocket(); // Création du socket
 
     int option = 1;
@@ -27,13 +28,15 @@ int initSocketServeur(int port) {
 
 int initSocketClient(char *serverIP, int serverPort)
 {
-	int sockfd = ssocket();
-	sconnect(serverIP, serverPort, sockfd);
-	return sockfd;
+    int sockfd = ssocket();
+    sconnect(serverIP, serverPort, sockfd);
+    return sockfd;
 }
 
-void deconnecterJoueur (Joueur* tableauJoueurs, int tailleLogique) {
-	for (int i = 0; i < tailleLogique; i++) {
-		sclose(tableauJoueurs[i].sockfd);
-	}
+void deconnecterJoueur(Joueur *tableauJoueurs, int tailleLogique)
+{
+    for (int i = 0; i < tailleLogique; i++)
+    {
+        sclose(tableauJoueurs[i].sockfd);
+    }
 }

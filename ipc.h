@@ -1,3 +1,8 @@
+/**
+ * @file ipc.h
+ * @brief Fichier d'en-tête pour les fonctions d'IPC (Inter-Process Communication).
+ */
+
 #ifndef _IPC_H_
 #define _IPC_H_
 
@@ -13,19 +18,85 @@
 #include "structure.h"
 #include "utils_v1.h"
 
-//permet de créer la mémoire partagé
-int creerClassement(Joueur* joueurs, int nbrJoueurs);
+/**
+ * @brief Crée un segment de mémoire partagée pour le classement des joueurs.
+ *
+ * PRE : Un tableau de joueurs et sa taille sont passés en argument.
+ * POST : Un segment de mémoire partagée est créé pour le classement des joueurs et son ID est renvoyé.
+ *
+ * @param joueurs Le tableau de joueurs.
+ * @param nbrJoueurs Le nombre de joueurs.
+ * @return L'ID du segment de mémoire partagée, ou -1 en cas d'erreur.
+ */
+int creerClassement(Joueur *joueurs, int nbrJoueurs);
 
+/**
+ * @brief Trie le classement des joueurs dans la mémoire partagée.
+ *
+ * PRE : Les ID du segment de mémoire partagée et du sémaphore, ainsi que le nombre de joueurs sont passés en argument.
+ * POST : Le classement des joueurs dans la mémoire partagée est trié.
+ *
+ * @param shm_id L'ID du segment de mémoire partagée.
+ * @param sem_id L'ID du sémaphore.
+ * @param nbrJoueurs Le nombre de joueurs.
+ */
 void trierClassement(int shm_id, int sem_id, int nbrJoueurs);
 
-void ecrireScore(int shm_id, int sem_id, int score, char* pseudo, int index);
+/**
+ * @brief Écrit le score d'un joueur dans la mémoire partagée.
+ *
+ * PRE : Les ID du segment de mémoire partagée et du sémaphore, le score du joueur, son pseudo et son index sont passés en argument.
+ * POST : Le score du joueur est écrit dans la mémoire partagée.
+ *
+ * @param shm_id L'ID du segment de mémoire partagée.
+ * @param sem_id L'ID du sémaphore.
+ * @param score Le score du joueur.
+ * @param pseudo Le pseudo du joueur.
+ * @param index L'index du joueur.
+ */
+void ecrireScore(int shm_id, int sem_id, int score, char *pseudo, int index);
 
-void lireClassement(int shm_id, int sem_id, Joueur* copieClassement, int nbrJoueurs);
+/**
+ * @brief Lit le classement des joueurs dans la mémoire partagée.
+ *
+ * PRE : Les ID du segment de mémoire partagée et du sémaphore, un tableau pour copier le classement et le nombre de joueurs sont passés en argument.
+ * POST : Le classement des joueurs est lu de la mémoire partagée et copié dans le tableau.
+ *
+ * @param shm_id L'ID du segment de mémoire partagée.
+ * @param sem_id L'ID du sémaphore.
+ * @param copieClassement Le tableau pour copier le classement.
+ * @param nbrJoueurs Le nombre de joueurs.
+ */
+void lireClassement(int shm_id, int sem_id, Joueur *copieClassement, int nbrJoueurs);
 
+/**
+ * @brief Supprime le segment de mémoire partagée pour le classement des joueurs.
+ *
+ * PRE : L'ID du segment de mémoire partagée est passé en argument.
+ * POST : Le segment de mémoire partagée pour le classement des joueurs est supprimé.
+ *
+ * @param shm_id L'ID du segment de mémoire partagée.
+ */
 void supprimerClassement(int shm_id);
 
+/**
+ * @brief Crée un sémaphore.
+ *
+ * PRE : Aucun argument n'est passé.
+ * POST : Un sémaphore est créé et son ID est renvoyé.
+ *
+ * @return L'ID du sémaphore, ou -1 en cas d'erreur.
+ */
 int creerSemaphore();
 
+/**
+ * @brief Supprime un sémaphore.
+ *
+ * PRE : L'ID du sémaphore est passé en argument.
+ * POST : Le sémaphore est supprimé.
+ *
+ * @param sem_id L'ID du sémaphore.
+ */
 void supprimerSemaphore(int sem_id);
 
 #endif

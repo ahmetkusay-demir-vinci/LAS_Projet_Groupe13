@@ -41,18 +41,18 @@ void creerEnsembleTuiles(int *ensembleTuiles, bool presenceDUnFichier, char *nom
     }
     else
     {
-        int fd = sopen(nomDuFichier,O_RDONLY,0200); // O_RDWR pour lecture et écriture
-		
+        int fd = sopen(nomDuFichier, O_RDONLY, 0200); // O_RDWR pour lecture et écriture
+
         if (fd == -1)
         {
             perror("Erreur lors de l'ouverture du fichier");
             exit(0);
         }
-       
+
         char **tableau = readFileToTable(fd);
-		
+
         int indice = 0;
-       
+
         for (int i = 20 * nbr_Partie + 19; i >= 20 * nbr_Partie; i--)
         {
             ensembleTuiles[indice] = atoi(tableau[i]);
@@ -79,8 +79,8 @@ int tirerTuile(int *ensembleTuiles, int *tailleLogique)
     {
         return -1; // Si le nombre de tuiles est insuffisant
     }
-        
-    // Tirage de la dernière tuile de l'ensemble    
+
+    // Tirage de la dernière tuile de l'ensemble
     int tuile = ensembleTuiles[*tailleLogique - 1];
 
     (*tailleLogique)--;
@@ -103,7 +103,7 @@ bool placerTuile(int *plateau, int tuile)
 
     if (position < 0 || position >= NBR_MAX_TUILE_PAR_PLATEAU)
     {
-        printf("Position invalide.\n");
+        printf("Position invalide !\n");
         return false;
     }
 
@@ -147,7 +147,7 @@ int calculerScore(const int *plateau)
         }
         else
         {
-            scoreTotal += SCORES[longueurSuite]; 
+            scoreTotal += SCORES[longueurSuite];
             longueurSuite = 0;
         }
     }
@@ -155,7 +155,7 @@ int calculerScore(const int *plateau)
     // Ajouter le score de la dernière suite
     if (longueurSuite > 0)
     {
-        scoreTotal += SCORES[longueurSuite]; 
+        scoreTotal += SCORES[longueurSuite];
     }
 
     return scoreTotal;
@@ -170,7 +170,8 @@ void afficherPlateau(const int *plateau)
         if (plateau[i] != 0)
         {
             printf("%d ", plateau[i]);
-        } else if(plateau[i] == 31)
+        }
+        else if (plateau[i] == 31)
         {
             printf("J ");
         }
