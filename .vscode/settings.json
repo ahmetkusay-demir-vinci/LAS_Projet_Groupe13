@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "stdlib.h": "c",
-        "structure.h": "c"
+        "structure.h": "c",
+        "jeu.h": "c"
     }
 }

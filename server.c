@@ -11,6 +11,7 @@
 #include "structure.h"
 #include "network.h"
 #include "jeu.h"
+#include "ipc.h"
 
 #define MIN_PLAYERS 2
 #define MAX_PLAYERS 4
@@ -36,7 +37,8 @@ int tablePipeEcritureDuFils[4][2];
 // sigset_t set;
 
 // Initialisation des fonctions
-bool contientEntier(int *tableau, int element, int tailleLogique);
+// bool contientEntier(int *tableau, int element, int tailleLogique);
+
 
 void endRegisterHandler(int sig)
 {

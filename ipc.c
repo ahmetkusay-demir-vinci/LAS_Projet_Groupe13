@@ -11,11 +11,11 @@ int creerClassement(int nbrJoueurs)
 
 void lireClassement(int shm_id, int nbrJoueurs)
 {
-    Joueur* classement = sshmat(shm_id, NULL, 0);
+    Joueur* classement = sshmat(shm_id);
     
     for (int i = 0; i < nbrJoueurs; i++) 
     {
-        printf("%d : Joueur %s : %s\n", i+1, classement[i].pseudo, classement[i].score);
+        printf("%d : Joueur %s : %d\n", i+1, classement[i].pseudo, classement[i].score);
     }
 
     sshmdt(classement);
@@ -23,7 +23,7 @@ void lireClassement(int shm_id, int nbrJoueurs)
 
 int ecrireClassement(int shm_id, int nbJoueurs)
 {
-    Joueur* classement = sshmat(shm_id, NULL, 0);
+    Joueur* classement = sshmat(shm_id);
 
     for (int i = 0; i < nbJoueurs; i++)
     {
@@ -38,9 +38,9 @@ int ecrireClassement(int shm_id, int nbJoueurs)
 }
 
 // Ajouter par moi (kusay) - Pour la mémoire partagée
-int supprimerClassement(int shm_id)
+void supprimerClassement(int shm_id)
 {
-    shmdelete(shm_id);
+    sshmdelete(shm_id);
     printf("Classement supprimé avec succès !\n");
 }
 
