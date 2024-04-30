@@ -31,9 +31,9 @@ int main(int argc, char *argv[])
 
 	StructMessage msg;
 
-	if (argc == 2)
+	if (argc == 3)
 	{
-		strcpy(nomDuFichier, argv[1]);
+		strcpy(nomDuFichier, argv[2]);
 
 		int fd = sopen(nomDuFichier, O_RDONLY, 0200); // O_RDWR pour lecture et écriture
 
@@ -48,11 +48,6 @@ int main(int argc, char *argv[])
     	inverserTableau(tableauFichier, tailleLogique);
 
 		presenceDUnFichier = true;
-		
-		for (int i = 0; i < NBR_MAX_TUILE_PAR_PLATEAU + 1; i++)
-		{
-			printf("i=> %d ==>%s \n", i, tableauFichier[i]);
-		}
 	}
 
 	/* retrieve player name */
@@ -71,7 +66,7 @@ int main(int argc, char *argv[])
 	strcpy(msg.messageText, pseudo);
 	msg.code = INSCRIPTION_REQUEST;
 
-	socketPlayer = initSocketClient(SERVER_IP, SERVER_PORT);
+	socketPlayer = initSocketClient(SERVER_IP, atoi(argv[1]));
 
 	swrite(socketPlayer, &msg, sizeof(msg));
 
@@ -83,7 +78,7 @@ int main(int argc, char *argv[])
 	case INSCRIPTION_OK:
 		printf("Réponse du serveur : Inscription acceptée\n");
 		sread(socketPlayer, &joueur, sizeof(Joueur));
-		printf("test joueur %s \n", joueur.pseudo);
+		printf("Joueur %s \n\n", joueur.pseudo);
 		break;
 	case INSCRIPTION_KO:
 		printf("Réponse du serveur : Inscription refusée\n");
@@ -101,7 +96,7 @@ int main(int argc, char *argv[])
 	{
 		printf("DEBUT JEU\n");
 		initierPlateauJoueur(&joueur);
-		afficherPlateau(joueur.plateau);
+
 		int tuile;
 		bool encours = true;
 
@@ -111,41 +106,41 @@ int main(int argc, char *argv[])
 			sread(socketPlayer, &tuile, sizeof(int));
 			if (tuile == -1)
 			{
-				printf("Fin des tours\n");
-
-				afficherPlateau(joueur.plateau);
-
+				printf("FIN DES TOURS\n\n");
 				encours = false;
 				break;
 			}
 
 			if (tuile == 31)
 			{
-				printf("La tuile a placer est le joker\n");
+				printf("La tuile à placer est le joker\n");
 			}
 			else
 			{
-				printf("La tuile a placer est la suivante: %d\n", tuile);
+				printf("La tuile à placer est la suivante: %d\n", tuile);
 			}
 			if (placerTuile(joueur.plateau, tuile, presenceDUnFichier, tableauFichier, &tailleLogique))
 			{
-				printf("Placement de la tuile réussis\n ");
 				afficherPlateau(joueur.plateau);
+				printf("\n");
 			}
 
 			bool result = true;
 			swrite(socketPlayer, &result, sizeof(bool));
 		}
 		int scoreFinal = calculerScore(joueur.plateau);
-		printf("Vous avez obtenu un score de : %d \n", scoreFinal);
+		printf("Vous avez obtenu un score de : %d \n\n", scoreFinal);
 		swrite(socketPlayer, &scoreFinal, sizeof(int));
 
 		Joueur copieClassementFinale[MAX_PLAYERS];
 		sread(socketPlayer, copieClassementFinale, sizeof(Joueur) * MAX_PLAYERS);
-		printf("Voici les résultats !\n");
+		printf("\t\t  VOICI LES RESULTATS !\n");
 		for (int i = 0; i < MAX_PLAYERS; i++)
 		{
-			printf("%d : Joueur => %s avec un score de %d points\n", i + 1, copieClassementFinale[i].pseudo, copieClassementFinale[i].score);
+			if(strlen(copieClassementFinale[i].pseudo)!=0){
+				printf("\t%d => %s avec un score de %d points\n", i + 1, copieClassementFinale[i].pseudo, copieClassementFinale[i].score);
+			}
+			
 		}
 	}
 	else
@@ -167,10 +162,5 @@ void inverserTableau(char **tableau, int taille) {
         tableau[fin] = temp;
         debut++;
         fin--;
-    }
-	for (int i = 0; i < NBR_MAX_TUILE_PAR_PLATEAU+1; i++)
-	{
-		printf("ici %d => %s\n",i,tableau[i]);
-	}
-	
+    }	
 }

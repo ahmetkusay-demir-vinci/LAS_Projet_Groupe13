@@ -9,7 +9,7 @@
 #include "utils_v1.h"
 #include "structure.h"
 
-#define SERVER_PORT 9555      /* Port du serveur */
+
 #define SERVER_IP "127.0.0.1" /* localhost */
 
 /**

@@ -117,7 +117,7 @@ bool placerTuile(int *plateau, int tuile, bool presenceDUnFichier, char **tablea
             
         (*tailleLogique)--;
     }
-    printf("\n\nPOSITION CHOISI %d\n\n",position+1);
+    printf("Position choisie : %d\n",position+1);
     // Si la position est déjà occupée, la tuile sera placée à droite de la position demandée
     while (plateau[position] != 0)
     {

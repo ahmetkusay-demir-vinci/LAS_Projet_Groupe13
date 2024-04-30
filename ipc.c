@@ -53,7 +53,7 @@ void trierClassement(int nbrJoueurs)
 
 void ecrireScore(int score, char *pseudo, int index)
 {
-    printf("id : %d\n", shm_id);
+ 
     Joueur *classement = sshmat(shm_id);
     sem_down(sem_id, 0);
 
@@ -66,7 +66,7 @@ void ecrireScore(int score, char *pseudo, int index)
 
 void lireClassement(Joueur *copieClassement, int nbrJoueurs)
 {
-    printf("id 2: %d\n", shm_id);
+    
     Joueur *classement = sshmat(shm_id);
     sem_down(sem_id, 0);
 
