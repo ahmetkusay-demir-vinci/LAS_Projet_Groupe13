@@ -7,27 +7,67 @@
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include "structure.h"
 #include "utils_v1.h"
 #include "network.h"
 #include "jeu.h"
 
-int main(int argc, char **argv)
+
+void inverserTableau(char **tableau, int taille);
+
+int main(int argc, char *argv[])
 {
 	Joueur joueur;
 	char pseudo[MAX_PSEUDO];
 	int socketPlayer;
 	int ret;
+	char nomDuFichier[MAX_TEXT];
+	char **tableauFichier;
+	bool presenceDUnFichier = false;
+	int tailleLogique = 0;
 
 	StructMessage msg;
+
+	if (argc == 2)
+	{
+		strcpy(nomDuFichier, argv[1]);
+
+		int fd = sopen(nomDuFichier, O_RDONLY, 0200); // O_RDWR pour lecture et écriture
+
+		if (fd == -1)
+		{
+			perror("Erreur lors de l'ouverture du fichier");
+			exit(0);
+		}
+		tableauFichier = readFileToTable(fd);
+		tailleLogique = NBR_MAX_TUILE_PAR_PLATEAU;
+		// Inverser le tableau
+    	inverserTableau(tableauFichier, tailleLogique);
+
+		presenceDUnFichier = true;
+		
+		for (int i = 0; i < NBR_MAX_TUILE_PAR_PLATEAU + 1; i++)
+		{
+			printf("i=> %d ==>%s \n", i, tableauFichier[i]);
+		}
+	}
 
 	/* retrieve player name */
 	printf("Bienvenue dans le programe d'inscription au serveur de jeu\n");
 	printf("Pour participer entrez votre nom :\n");
-	ret = sread(0, pseudo, MAX_PSEUDO);
-	checkNeg(ret, "read client error");
-	pseudo[ret - 1] = '\0';
+	if (presenceDUnFichier == false)
+	{
+		ret = sread(0, pseudo, MAX_PSEUDO);
+		checkNeg(ret, "read client error");
+		pseudo[ret - 1] = '\0';
+	}else{
+		strcpy(pseudo,tableauFichier[NBR_MAX_TUILE_PAR_PLATEAU]);
+		tailleLogique--;
+	}
+
 	strcpy(msg.messageText, pseudo);
 	msg.code = INSCRIPTION_REQUEST;
 
@@ -87,7 +127,7 @@ int main(int argc, char **argv)
 			{
 				printf("La tuile a placer est la suivante: %d\n", tuile);
 			}
-			if (placerTuile(joueur.plateau, tuile))
+			if (placerTuile(joueur.plateau, tuile, presenceDUnFichier, tableauFichier, &tailleLogique))
 			{
 				printf("Placement de la tuile réussis\n ");
 				afficherPlateau(joueur.plateau);
@@ -114,4 +154,23 @@ int main(int argc, char **argv)
 		sclose(socketPlayer);
 	}
 	return 0;
+}
+
+void inverserTableau(char **tableau, int taille) {
+    int debut = 0;
+    int fin = taille;
+
+    while (debut < fin) {
+        // Échange les éléments du début avec ceux de la fin
+        char *temp = tableau[debut];
+        tableau[debut] = tableau[fin];
+        tableau[fin] = temp;
+        debut++;
+        fin--;
+    }
+	for (int i = 0; i < NBR_MAX_TUILE_PAR_PLATEAU+1; i++)
+	{
+		printf("ici %d => %s\n",i,tableau[i]);
+	}
+	
 }

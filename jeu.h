@@ -60,7 +60,7 @@ int tirerTuile(int *ensembleTuiles, int *tailleLogique);
  * @param tuile La tuile à placer.
  * @return Un booléen indiquant si l'opération a réussi.
  */
-bool placerTuile(int *plateau, int tuile);
+bool placerTuile(int *plateau, int tuile, bool presenceDUnFichier, char **tableauFichier, int *tailleLogique);
 
 /**
  * @brief Calcule le score d'un plateau.

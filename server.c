@@ -246,10 +246,10 @@ int main(int argc, char *argv[])
 
 	int compteur;
 
-	while (nbr_tours <= 2)
+	while (nbr_tours <= 20)
 	{
 		int tuileTirer;
-		if (nbr_tours == 2)
+		if (nbr_tours == 20)
 		{
 			tuileTirer = -1;
 			printf("C'est la fin des tours \n");

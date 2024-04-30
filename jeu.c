@@ -87,26 +87,37 @@ int tirerTuile(int *ensembleTuiles, int *tailleLogique)
 
     return tuile;
 }
-
-bool placerTuile(int *plateau, int tuile)
+bool placerTuile(int *plateau, int tuile, bool presenceDUnFichier, char **tableauFichier, int *tailleLogique)
 {
+    int position;
 
-    char resultat[4]; // 2 chiffres + \n + \0
-    printf("Veuillez introduire la position souhaitée :\n");
-    int ret = readLimitedLine(resultat, 4);
-    if (ret == -1)
+    if (presenceDUnFichier == false)
     {
-        return false;
+        char resultat[4]; // 2 chiffres + \n + \0
+        printf("Veuillez introduire la position souhaitée :\n");
+        int ret = readLimitedLine(resultat, 4);
+        if (ret == -1)
+        {
+            return false;
+        }
+
+        position = atoi(resultat) - 1;
+
+        if (position < 0 || position >= NBR_MAX_TUILE_PAR_PLATEAU)
+        {
+            printf("Position invalide !\n");
+            return false;
+        }
     }
-
-    int position = atoi(resultat) - 1;
-
-    if (position < 0 || position >= NBR_MAX_TUILE_PAR_PLATEAU)
+    else
     {
-        printf("Position invalide !\n");
-        return false;
+      
+        position = atoi(tableauFichier[*tailleLogique])-1;
+      
+            
+        (*tailleLogique)--;
     }
-
+    printf("\n\nPOSITION CHOISI %d\n\n",position+1);
     // Si la position est déjà occupée, la tuile sera placée à droite de la position demandée
     while (plateau[position] != 0)
     {
