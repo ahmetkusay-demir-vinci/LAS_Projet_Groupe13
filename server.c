@@ -22,8 +22,7 @@ Joueur tabPlayers[MAX_PLAYERS];
 int nbPlayers = 0;
 int ensembleTuiles[NBR_MAX_TUILE];
 int nbr_tours = 0;
-int id_memoirePartagee = 0;
-int id_semaphore = 0;
+
 
 // creerEnsembleTuile(ensembleTuiles);
 // calculerScore(plateau, scores, &scoreTotal);
@@ -89,14 +88,20 @@ void childServerProcess(void *arg0, void *arg1, void *arg2)
 	while (encours)
 	{
 		int score;
+
 		sread(socketPlayer, &score, sizeof(int));
 		printf("Le score a été recu au niveau du serveur fils\n");
 
 		swrite(pipeEcritureDuFils[1], &score, sizeof(int));
 		printf("Envoie du score au serveur parent \n");
 
+		//Dawid
+		bool classementFini;
+		sread(pipeEcritureDuPere[0], &classementFini, sizeof(bool));
+
 		Joueur copieClassement[MAX_PLAYERS];
-		lireClassement(id_memoirePartagee, id_semaphore, copieClassement, MAX_PLAYERS);
+		lireClassement(copieClassement, MAX_PLAYERS);
+
 		for (int i = 0; i < MAX_PLAYERS; i++)
 		{
 			printf("%s %d\n", copieClassement[i].pseudo, copieClassement[i].score);
@@ -237,8 +242,8 @@ int main(int argc, char *argv[])
 		sclose(tablePipeEcritureDuFils[i][1]);
 	}
 
-	id_memoirePartagee = creerClassement(tabPlayers, nbPlayers);
-	id_semaphore = creerSemaphore();
+	creerClassement(tabPlayers, nbPlayers);
+
 	int compteur;
 
 	while (nbr_tours <= 2)
@@ -296,19 +301,27 @@ int main(int argc, char *argv[])
 	for (int i = 0; i < nbPlayers; i++)
 	{
 		sread(tablePipeEcritureDuFils[i][0], &score, sizeof(int));
-		ecrireScore(id_memoirePartagee, id_semaphore, score, tabPlayers[i].pseudo, i);
+		ecrireScore(score, tabPlayers[i].pseudo, i);
+	}
+
+	//Dawid
+
+	ecrireScore(0, "Joueur", 4);
+	bool classementFini = true;
+	for (int i = 0; i < nbPlayers; i++)
+	{
+		swrite(tablePipeEcritureDuPere[i][1], &classementFini, sizeof(bool));
 	}
 
 	printf("Classement final : \n");
-	trierClassement(id_memoirePartagee,id_semaphore,nbPlayers);
+	trierClassement(MAX_PLAYERS);
 
 	Joueur copieClassement[MAX_PLAYERS];
-	lireClassement(id_memoirePartagee, id_semaphore, copieClassement, nbPlayers);
+	lireClassement(copieClassement, MAX_PLAYERS);
 
 	for (int i = 0; i < nbPlayers; i++)
 	{
 		printf("Position %d : Joueur => %s => score %d\n", i + 1, copieClassement[i].pseudo, copieClassement[i].score);
-		swrite(tablePipeEcritureDuPere[i][1], &copieClassement, sizeof(Joueur) * nbPlayers);
 	}
 
 	end_inscriptions = 0;

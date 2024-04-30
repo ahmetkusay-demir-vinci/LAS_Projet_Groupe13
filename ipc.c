@@ -3,9 +3,12 @@
 
 #include "ipc.h"
 
-int creerClassement(Joueur *joueurs, int nbrJoueurs)
+int shm_id = 0;
+int sem_id = 0;
+
+void creerClassement(Joueur *joueurs, int nbrJoueurs)
 {
-    int shm_id = sshmget(KEY_MEMORY, sizeof(Joueur) * 4, IPC_CREAT | PERM);
+    shm_id = sshmget(KEY_MEMORY, sizeof(Joueur) * 4, IPC_CREAT | PERM);
 
     printf("Nombre de joueurs : %d \n", nbrJoueurs);
 
@@ -17,10 +20,11 @@ int creerClassement(Joueur *joueurs, int nbrJoueurs)
 
     sshmdt(classement);
     printf("Mémoire partagée détachée !\n");
-    return shm_id;
+
+    creerSemaphore();
 }
 
-void trierClassement(int shm_id, int sem_id, int nbrJoueurs)
+void trierClassement(int nbrJoueurs)
 {
     Joueur *classement = sshmat(shm_id);
     if (classement == NULL) {
@@ -47,8 +51,9 @@ void trierClassement(int shm_id, int sem_id, int nbrJoueurs)
     sshmdt(classement);
 }
 
-void ecrireScore(int shm_id, int sem_id, int score, char *pseudo, int index)
+void ecrireScore(int score, char *pseudo, int index)
 {
+    printf("id : %d\n", shm_id);
     Joueur *classement = sshmat(shm_id);
     sem_down(sem_id, 0);
 
@@ -59,8 +64,9 @@ void ecrireScore(int shm_id, int sem_id, int score, char *pseudo, int index)
     sshmdt(classement);
 }
 
-void lireClassement(int shm_id, int sem_id, Joueur *copieClassement, int nbrJoueurs)
+void lireClassement(Joueur *copieClassement, int nbrJoueurs)
 {
+    printf("id 2: %d\n", shm_id);
     Joueur *classement = sshmat(shm_id);
     sem_down(sem_id, 0);
 
@@ -71,20 +77,19 @@ void lireClassement(int shm_id, int sem_id, Joueur *copieClassement, int nbrJoue
 }
 
 // Pour la mémoire Partagée
-void supprimerClassement(int shm_id)
+void supprimerClassement()
 {
     sshmdelete(shm_id);
     printf("Classement supprimé avec succès !\n");
 }
 
-int creerSemaphore()
+void creerSemaphore()
 {
-    int sem_id = sem_create(KEY_SEMAPHORE, NSEM, PERM, VAL);
+    sem_id = sem_create(KEY_SEMAPHORE, NSEM, PERM, VAL);
     printf("Ensemble de sémaphores initialisé avec succès !\n");
-    return sem_id;
 }
 
-void supprimerSemaphore(int sem_id)
+void supprimerSemaphore()
 {
     sem_delete(sem_id);
     printf("Sémaphores détruits avec succès !\n");
