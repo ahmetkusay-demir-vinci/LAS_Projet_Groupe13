@@ -96,7 +96,7 @@ void childServerProcess(void *arg0, void *arg1, void *arg2)
 		printf("Envoie du score au serveur parent \n");
 
 		Joueur copieClassement[MAX_PLAYERS];
-		sread(pipeEcritureDuPere[0], copieClassement, MAX_PLAYERS);
+		lireClassement(id_memoirePartagee, id_semaphore, copieClassement, MAX_PLAYERS);
 		for (int i = 0; i < MAX_PLAYERS; i++)
 		{
 			printf("%s %d\n", copieClassement[i].pseudo, copieClassement[i].score);
@@ -300,7 +300,7 @@ int main(int argc, char *argv[])
 	}
 
 	printf("Classement final : \n");
-	// trierClassement(id_memoirePartagee,id_semaphore,nbPlayers);
+	trierClassement(id_memoirePartagee,id_semaphore,nbPlayers);
 
 	Joueur copieClassement[MAX_PLAYERS];
 	lireClassement(id_memoirePartagee, id_semaphore, copieClassement, nbPlayers);

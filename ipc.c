@@ -5,14 +5,14 @@
 
 int creerClassement(Joueur *joueurs, int nbrJoueurs)
 {
-    int shm_id = sshmget(KEY_MEMORY, sizeof(Joueur) * 4, IPC_CREAT | PERM); // remettre nbrJoueurs à la place de 4 en fin de programme
+    int shm_id = sshmget(KEY_MEMORY, sizeof(Joueur) * nbrJoueurs, IPC_CREAT | PERM);
 
     printf("Nombre de joueurs : %d \n", nbrJoueurs);
 
     Joueur *classement = sshmat(shm_id);
     printf("Mémoire partagée attachée !\n");
 
-    memcpy(classement, &joueurs, sizeof(Joueur) * 4); // remettre nbrJoueurs à la place de 4 en fin de programme
+    memcpy(classement, joueurs, sizeof(Joueur) * nbrJoueurs);
     printf("Classement initialisé avec succès !\n");
 
     sshmdt(classement);
@@ -22,16 +22,21 @@ int creerClassement(Joueur *joueurs, int nbrJoueurs)
 
 void trierClassement(int shm_id, int sem_id, int nbrJoueurs)
 {
-    Joueur **classement = sshmat(shm_id);
+    Joueur *classement = sshmat(shm_id);
+    if (classement == NULL) {
+        printf("Erreur : Impossible d'attacher la mémoire partagée.\n");
+        return;
+    }
+
     sem_down(sem_id, 0);
 
     for (int i = 0; i < nbrJoueurs - 1; i++)
     {
         for (int j = i + 1; j < nbrJoueurs; j++)
         {
-            if (classement[j] != NULL && classement[i] != NULL && classement[j]->score < classement[i]->score)
+            if (classement[i].score < classement[j].score)
             {
-                Joueur *temp = classement[i];
+                Joueur temp = classement[i];
                 classement[i] = classement[j];
                 classement[j] = temp;
             }
