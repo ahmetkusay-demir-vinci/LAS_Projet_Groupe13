@@ -112,13 +112,12 @@ bool placerTuile(int *plateau, int tuile, bool presenceDUnFichier, char **tablea
     }
     else
     {
-      
-        position = atoi(tableauFichier[*tailleLogique])-1;
-      
-            
+
+        position = atoi(tableauFichier[*tailleLogique]) - 1;
+
         (*tailleLogique)--;
     }
-    printf("Position choisie : %d\n",position+1);
+    printf("Position choisie : %d\n", position + 1);
     // Si la position est déjà occupée, la tuile sera placée à droite de la position demandée
     while (plateau[position] != 0)
     {
@@ -137,7 +136,7 @@ int calculerScore(const int *plateau)
 {
     int longueurSuite = 0;
     int scoreTotal = 0;
-    int plateauCopie [NBR_MAX_TUILE_PAR_PLATEAU];
+    int plateauCopie[NBR_MAX_TUILE_PAR_PLATEAU];
 
     memcpy(plateauCopie, plateau, sizeof(int) * NBR_MAX_TUILE_PAR_PLATEAU);
 
@@ -149,12 +148,12 @@ int calculerScore(const int *plateau)
 
         if (tuile == 31)
         {
-            //tuile = tuilePrecedente + 1;
-            if (tuilePrecedente+2 == tuileSuivante)
+            // tuile = tuilePrecedente + 1;
+            if (tuilePrecedente + 2 == tuileSuivante)
             {
                 tuile = tuilePrecedente + 1;
             }
-            else if(tuileSuivante > tuilePrecedente + 2)
+            else if (tuileSuivante > tuilePrecedente + 2)
             {
                 tuile = tuilePrecedente + 1;
             }

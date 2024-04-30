@@ -23,7 +23,8 @@ void creerClassement(Joueur *joueurs)
 void trierClassement(int nbrJoueurs)
 {
     Joueur *classement = sshmat(shm_id);
-    if (classement == NULL) {
+    if (classement == NULL)
+    {
         printf("Erreur : Impossible d'attacher la mémoire partagée.\n");
         return;
     }
@@ -49,7 +50,7 @@ void trierClassement(int nbrJoueurs)
 
 void ecrireScore(int score, char *pseudo, int index)
 {
- 
+
     Joueur *classement = sshmat(shm_id);
     sem_down(sem_id, 0);
 
@@ -62,7 +63,7 @@ void ecrireScore(int score, char *pseudo, int index)
 
 void lireClassement(Joueur *copieClassement, int nbrJoueurs)
 {
-    
+
     Joueur *classement = sshmat(shm_id);
     sem_down(sem_id, 0);
 
@@ -75,7 +76,7 @@ void lireClassement(Joueur *copieClassement, int nbrJoueurs)
 // Pour la mémoire Partagée
 void supprimerClassement()
 {
-    if (shm_id!=-1)
+    if (shm_id != -1)
     {
         sshmdelete(shm_id);
     }
@@ -88,8 +89,8 @@ void creerSemaphore()
 
 void supprimerSemaphore()
 {
-    if (sem_id!=-1)
+    if (sem_id != -1)
     {
         sem_delete(sem_id);
-    }   
+    }
 }

@@ -1,48 +1,28 @@
-/**
- * @file network.h
- * @brief Fichier d'en-tête pour les fonctions de réseau.
- */
-
 #ifndef _NETWORK_H_
 #define _NETWORK_H_
 
 #include "utils_v1.h"
 #include "structure.h"
 
-
 #define SERVEUR_IP "127.0.0.1" /* localhost */
 
 /**
- * @brief Initialise un socket serveur.
- *
- * PRE : Le port sur lequel le serveur doit être initialisé est passé en argument.
- * POST : Un socket serveur est initialisé et son descripteur est renvoyé. En cas d'erreur, une valeur négative est renvoyée.
- *
- * @param port Le port sur lequel initialiser le serveur.
- * @return Le descripteur du socket serveur, ou une valeur négative en cas d'erreur.
+ * PRE : port est le numéro de port sur lequel le serveur doit écouter.
+ * POST : Initialise un socket serveur sur le port spécifié et renvoie le descripteur de fichier du socket.
+ * RETURN : Le descripteur de fichier du socket.
  */
 int initSocketServeur(int port);
 
 /**
- * @brief Initialise un socket client.
- *
- * PRE : L'adresse IP du serveur et le port du serveur sont passés en argument.
- * POST : Un socket client est initialisé et son descripteur est renvoyé. En cas d'erreur, une valeur négative est renvoyée.
- *
- * @param serveurIP L'adresse IP du serveur.
- * @param serveurPort Le port du serveur.
- * @return Le descripteur du socket client, ou une valeur négative en cas d'erreur.
+ * PRE : serveurIP est l'adresse IP du serveur, serveurPort est le numéro de port du serveur.
+ * POST : Initialise un socket client pour se connecter au serveur à l'adresse IP et au port spécifiés, et renvoie le descripteur de fichier du socket.
+ * RETURN : Le descripteur de fichier du socket.
  */
 int initSocketClient(char *serveurIP, int serveurPort);
 
 /**
- * @brief Déconnecte un joueur.
- *
- * PRE : Un tableau de joueurs et sa taille logique sont passés en argument.
- * POST : Le joueur est déconnecté et le tableau de joueurs est mis à jour.
- *
- * @param tableauJoueurs Le tableau de joueurs.
- * @param tailleLogique La taille logique du tableau de joueurs.
+ * PRE : tableauJoueurs est un pointeur vers un tableau de structures Joueur, tailleLogique est la taille logique du tableau de joueurs.
+ * POST : Déconnecte un joueur du tableau de joueurs et met à jour la taille logique.
  */
 void deconnecterJoueur(Joueur *tableauJoueurs, int tailleLogique);
 

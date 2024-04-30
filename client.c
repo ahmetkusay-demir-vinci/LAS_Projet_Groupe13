@@ -15,7 +15,6 @@
 #include "network.h"
 #include "jeu.h"
 
-
 void inverserTableau(char **tableau, int taille);
 
 int main(int argc, char *argv[])
@@ -45,7 +44,7 @@ int main(int argc, char *argv[])
 		tableauFichier = readFileToTable(fd);
 		tailleLogique = NBR_MAX_TUILE_PAR_PLATEAU;
 		// Inverser le tableau
-    	inverserTableau(tableauFichier, tailleLogique);
+		inverserTableau(tableauFichier, tailleLogique);
 
 		presenceDUnFichier = true;
 	}
@@ -58,8 +57,10 @@ int main(int argc, char *argv[])
 		ret = sread(0, pseudo, MAX_PSEUDO);
 		checkNeg(ret, "read client error");
 		pseudo[ret - 1] = '\0';
-	}else{
-		strcpy(pseudo,tableauFichier[NBR_MAX_TUILE_PAR_PLATEAU]);
+	}
+	else
+	{
+		strcpy(pseudo, tableauFichier[NBR_MAX_TUILE_PAR_PLATEAU]);
 		tailleLogique--;
 	}
 
@@ -137,10 +138,10 @@ int main(int argc, char *argv[])
 		printf("\t\t  VOICI LES RESULTATS !\n");
 		for (int i = 0; i < MAX_JOUEURS; i++)
 		{
-			if(strlen(copieClassementFinal[i].pseudo)!=0){
+			if (strlen(copieClassementFinal[i].pseudo) != 0)
+			{
 				printf("\t%d => %s avec un score de %d points\n", i + 1, copieClassementFinal[i].pseudo, copieClassementFinal[i].score);
 			}
-			
 		}
 	}
 	else
@@ -151,16 +152,18 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-void inverserTableau(char **tableau, int taille) {
-    int debut = 0;
-    int fin = taille;
+void inverserTableau(char **tableau, int taille)
+{
+	int debut = 0;
+	int fin = taille;
 
-    while (debut < fin) {
-        // Échange les éléments du début avec ceux de la fin
-        char *temp = tableau[debut];
-        tableau[debut] = tableau[fin];
-        tableau[fin] = temp;
-        debut++;
-        fin--;
-    }	
+	while (debut < fin)
+	{
+		// Échange les éléments du début avec ceux de la fin
+		char *temp = tableau[debut];
+		tableau[debut] = tableau[fin];
+		tableau[fin] = temp;
+		debut++;
+		fin--;
+	}
 }

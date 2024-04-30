@@ -1,3 +1,10 @@
+/*
+ * Groupe: 13
+ * Auteurs: Ciborowski Dawid, Demir Ahmet Kusay, Koubai Omar
+ * Serie : 2BIN2
+ * Date: 30.04.2024
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,7 +20,7 @@
 #include "jeu.h"
 #include "ipc.h"
 
-#define TEMPS_INSCRIPTION 15
+#define TEMPS_INSCRIPTION 30
 
 volatile sig_atomic_t finInscriptions = 0;
 volatile sig_atomic_t sigintActive = 0;
@@ -54,7 +61,7 @@ void childServerProcess(void *arg0, void *arg1, void *arg2)
 	{
 		int tuile;
 		sread(pipeEcritureDuPere[0], &tuile, sizeof(int));
-		
+
 		swrite(socketJoueur, &tuile, sizeof(int));
 
 		if (tuile != -1)
@@ -82,7 +89,7 @@ void childServerProcess(void *arg0, void *arg1, void *arg2)
 	Joueur copieClassement[MAX_JOUEURS];
 	lireClassement(copieClassement, MAX_JOUEURS);
 
-	swrite(socketJoueur, copieClassement, sizeof(Joueur) * MAX_JOUEURS);		
+	swrite(socketJoueur, copieClassement, sizeof(Joueur) * MAX_JOUEURS);
 
 	// on cloture les pipe a la fin
 	sclose(pipeEcritureDuPere[0]);
@@ -127,8 +134,8 @@ int main(int argc, char *argv[])
 		{
 
 			/* client trt */
-			nouveauSocketfd = accept(sockfd, NULL, NULL); 
-			if (nouveauSocketfd > 0)					 
+			nouveauSocketfd = accept(sockfd, NULL, NULL);
+			if (nouveauSocketfd > 0)
 			{
 
 				ret = sread(nouveauSocketfd, &msg, sizeof(msg));
@@ -167,7 +174,6 @@ int main(int argc, char *argv[])
 			if (sigintActive == 1)
 			{
 				printf("PARTIE ANNULEE .. CTRL-C ÉFFECTUÉ \n");
-				
 			}
 			else
 			{
@@ -284,7 +290,7 @@ int main(int argc, char *argv[])
 		{
 			swrite(tablePipeEcritureDuPere[i][1], &classementFini, sizeof(bool));
 		}
-		
+
 		// on cloture les pipes
 		for (int i = 0; i < nbrJoueurs; i++)
 		{
