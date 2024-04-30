@@ -5,14 +5,14 @@
 
 int creerClassement(Joueur *joueurs, int nbrJoueurs)
 {
-    int shm_id = sshmget(KEY_MEMORY, sizeof(Joueur) * nbrJoueurs, IPC_CREAT | PERM);
+    int shm_id = sshmget(KEY_MEMORY, sizeof(Joueur) * 4, IPC_CREAT | PERM);
 
     printf("Nombre de joueurs : %d \n", nbrJoueurs);
 
     Joueur *classement = sshmat(shm_id);
     printf("Mémoire partagée attachée !\n");
 
-    memcpy(classement, joueurs, sizeof(Joueur) * nbrJoueurs);
+    memcpy(classement, joueurs, sizeof(Joueur) * 4);
     printf("Classement initialisé avec succès !\n");
 
     sshmdt(classement);
