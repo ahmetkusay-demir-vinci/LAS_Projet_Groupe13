@@ -13,8 +13,8 @@
 #define bool _Bool
 #define NBR_MAX_TUILE 40
 #define NBR_MAX_TUILE_PAR_PLATEAU 20
-#define MIN_PLAYERS 2
-#define MAX_PLAYERS 4
+#define MIN_JOUEURS 2
+#define MAX_JOUEURS 4
 
 /**
  * @brief Crée un ensemble de tuiles.

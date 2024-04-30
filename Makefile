@@ -21,7 +21,7 @@ network.o: network.c utils_v1.h structure.h
 jeu.o: jeu.c utils_v1.h structure.h 
 	$(CC) $(CCFLAGS) -c jeu.c
 
-ipc.o: ipc.c utils_v1.h structure.h
+ipc.o: ipc.c utils_v1.h structure.h jeu.h
 	$(CC) $(CCFLAGS) -c ipc.c
 
 utils_v1.o: utils_v1.c utils_v1.h

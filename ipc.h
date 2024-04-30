@@ -27,7 +27,7 @@
  * @param joueurs Le tableau de joueurs.
  * @param nbrJoueurs Le nombre de joueurs.
  */
-void creerClassement(Joueur *joueurs, int nbrJoueurs);
+void creerClassement(Joueur *joueurs);
 
 /**
  * @brief Trie le classement des joueurs dans la mémoire partagée.

@@ -10,7 +10,7 @@
 #include "structure.h"
 
 
-#define SERVER_IP "127.0.0.1" /* localhost */
+#define SERVEUR_IP "127.0.0.1" /* localhost */
 
 /**
  * @brief Initialise un socket serveur.
@@ -29,11 +29,11 @@ int initSocketServeur(int port);
  * PRE : L'adresse IP du serveur et le port du serveur sont passés en argument.
  * POST : Un socket client est initialisé et son descripteur est renvoyé. En cas d'erreur, une valeur négative est renvoyée.
  *
- * @param serverIP L'adresse IP du serveur.
- * @param serverPort Le port du serveur.
+ * @param serveurIP L'adresse IP du serveur.
+ * @param serveurPort Le port du serveur.
  * @return Le descripteur du socket client, ou une valeur négative en cas d'erreur.
  */
-int initSocketClient(char *serverIP, int serverPort);
+int initSocketClient(char *serveurIP, int serveurPort);
 
 /**
  * @brief Déconnecte un joueur.

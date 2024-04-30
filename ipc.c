@@ -2,24 +2,20 @@
 #include <stdlib.h>
 
 #include "ipc.h"
+#include "jeu.h"
 
-int shm_id = 0;
-int sem_id = 0;
+int shm_id = -1;
+int sem_id = -1;
 
-void creerClassement(Joueur *joueurs, int nbrJoueurs)
+void creerClassement(Joueur *joueurs)
 {
-    shm_id = sshmget(KEY_MEMORY, sizeof(Joueur) * 4, IPC_CREAT | PERM);
-
-    printf("Nombre de joueurs : %d \n", nbrJoueurs);
+    shm_id = sshmget(KEY_MEMORY, sizeof(Joueur) * MAX_JOUEURS, IPC_CREAT | PERM);
 
     Joueur *classement = sshmat(shm_id);
-    printf("Mémoire partagée attachée !\n");
 
-    memcpy(classement, joueurs, sizeof(Joueur) * 4);
-    printf("Classement initialisé avec succès !\n");
+    memcpy(classement, joueurs, sizeof(Joueur) * MAX_JOUEURS);
 
     sshmdt(classement);
-    printf("Mémoire partagée détachée !\n");
 
     creerSemaphore();
 }
@@ -79,18 +75,21 @@ void lireClassement(Joueur *copieClassement, int nbrJoueurs)
 // Pour la mémoire Partagée
 void supprimerClassement()
 {
-    sshmdelete(shm_id);
-    printf("Classement supprimé avec succès !\n");
+    if (shm_id!=-1)
+    {
+        sshmdelete(shm_id);
+    }
 }
 
 void creerSemaphore()
 {
     sem_id = sem_create(KEY_SEMAPHORE, NSEM, PERM, VAL);
-    printf("Ensemble de sémaphores initialisé avec succès !\n");
 }
 
 void supprimerSemaphore()
 {
-    sem_delete(sem_id);
-    printf("Sémaphores détruits avec succès !\n");
+    if (sem_id!=-1)
+    {
+        sem_delete(sem_id);
+    }   
 }

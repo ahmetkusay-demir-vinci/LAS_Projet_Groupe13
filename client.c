@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 {
 	Joueur joueur;
 	char pseudo[MAX_PSEUDO];
-	int socketPlayer;
+	int socketJoueur;
 	int ret;
 	char nomDuFichier[MAX_TEXT];
 	char **tableauFichier;
@@ -66,23 +66,23 @@ int main(int argc, char *argv[])
 	strcpy(msg.messageText, pseudo);
 	msg.code = INSCRIPTION_REQUEST;
 
-	socketPlayer = initSocketClient(SERVER_IP, atoi(argv[1]));
+	socketJoueur = initSocketClient(SERVEUR_IP, atoi(argv[1]));
 
-	swrite(socketPlayer, &msg, sizeof(msg));
+	swrite(socketJoueur, &msg, sizeof(msg));
 
 	/* wait server response */
-	sread(socketPlayer, &msg, sizeof(msg));
+	sread(socketJoueur, &msg, sizeof(msg));
 
 	switch (msg.code)
 	{
 	case INSCRIPTION_OK:
 		printf("Réponse du serveur : Inscription acceptée\n");
-		sread(socketPlayer, &joueur, sizeof(Joueur));
+		sread(socketJoueur, &joueur, sizeof(Joueur));
 		printf("Joueur %s \n\n", joueur.pseudo);
 		break;
 	case INSCRIPTION_KO:
 		printf("Réponse du serveur : Inscription refusée\n");
-		sclose(socketPlayer);
+		sclose(socketJoueur);
 		exit(0);
 	default:
 		printf("Réponse du serveur non prévue %d\n", msg.code);
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* wait start of game or cancel */
-	sread(socketPlayer, &msg, sizeof(msg));
+	sread(socketJoueur, &msg, sizeof(msg));
 
 	if (msg.code == START_GAME)
 	{
@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
 		while (encours)
 		{
 
-			sread(socketPlayer, &tuile, sizeof(int));
+			sread(socketJoueur, &tuile, sizeof(int));
 			if (tuile == -1)
 			{
 				printf("FIN DES TOURS\n\n");
@@ -125,20 +125,20 @@ int main(int argc, char *argv[])
 				printf("\n");
 			}
 
-			bool result = true;
-			swrite(socketPlayer, &result, sizeof(bool));
+			bool resultat = true;
+			swrite(socketJoueur, &resultat, sizeof(bool));
 		}
 		int scoreFinal = calculerScore(joueur.plateau);
 		printf("Vous avez obtenu un score de : %d \n\n", scoreFinal);
-		swrite(socketPlayer, &scoreFinal, sizeof(int));
+		swrite(socketJoueur, &scoreFinal, sizeof(int));
 
-		Joueur copieClassementFinale[MAX_PLAYERS];
-		sread(socketPlayer, copieClassementFinale, sizeof(Joueur) * MAX_PLAYERS);
+		Joueur copieClassementFinal[MAX_JOUEURS];
+		sread(socketJoueur, copieClassementFinal, sizeof(Joueur) * MAX_JOUEURS);
 		printf("\t\t  VOICI LES RESULTATS !\n");
-		for (int i = 0; i < MAX_PLAYERS; i++)
+		for (int i = 0; i < MAX_JOUEURS; i++)
 		{
-			if(strlen(copieClassementFinale[i].pseudo)!=0){
-				printf("\t%d => %s avec un score de %d points\n", i + 1, copieClassementFinale[i].pseudo, copieClassementFinale[i].score);
+			if(strlen(copieClassementFinal[i].pseudo)!=0){
+				printf("\t%d => %s avec un score de %d points\n", i + 1, copieClassementFinal[i].pseudo, copieClassementFinal[i].score);
 			}
 			
 		}
@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
 	else
 	{
 		printf("PARTIE ANNULEE\n");
-		sclose(socketPlayer);
+		sclose(socketJoueur);
 	}
 	return 0;
 }

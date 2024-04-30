@@ -11,7 +11,7 @@
 #define SCORES_SIZE 20
 
 const int SCORES[SCORES_SIZE] = {0, 1, 3, 5, 7, 9, 11, 15, 20, 25, 30, 35, 40, 50, 60, 70, 85, 100, 150, 300};
-int nbr_Partie = 0;
+int nbrParties = 0;
 
 void creerEnsembleTuiles(int *ensembleTuiles, bool presenceDUnFichier, char *nomDuFichier)
 {
@@ -54,12 +54,12 @@ void creerEnsembleTuiles(int *ensembleTuiles, bool presenceDUnFichier, char *nom
 
         int indice = 0;
 
-        for (int i = 20 * nbr_Partie + 19; i >= 20 * nbr_Partie; i--)
+        for (int i = 20 * nbrParties + 19; i >= 20 * nbrParties; i--)
         {
             ensembleTuiles[indice] = atoi(tableau[i]);
             indice++;
         }
-        nbr_Partie++;
+        nbrParties++;
 
         sclose(fd); // Fermeture du descripteur de fichier après utilisation
     }
@@ -199,7 +199,7 @@ void afficherPlateau(const int *plateau)
         }
         else if (plateau[i] == 31)
         {
-            printf("J ");
+            printf("Jo ");
         }
         else
         {

@@ -26,10 +26,10 @@ int initSocketServeur(int port)
     return sockfd; // Retourne le descripteur de fichier du socket
 }
 
-int initSocketClient(char *serverIP, int serverPort)
+int initSocketClient(char *serveurIP, int serveurPort)
 {
     int sockfd = ssocket();
-    sconnect(serverIP, serverPort, sockfd);
+    sconnect(serveurIP, serveurPort, sockfd);
     return sockfd;
 }
 
