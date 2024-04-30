@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <string.h>
 
 #include "jeu.h"
 
@@ -136,23 +137,37 @@ int calculerScore(const int *plateau)
 {
     int longueurSuite = 0;
     int scoreTotal = 0;
+    int plateauCopie [NBR_MAX_TUILE_PAR_PLATEAU];
+
+    memcpy(plateauCopie, plateau, sizeof(int) * NBR_MAX_TUILE_PAR_PLATEAU);
 
     for (int i = 1; i < NBR_MAX_TUILE_PAR_PLATEAU; i++)
     {
-        int tuilePrecedente = plateau[i - 1];
-        int tuile = plateau[i];
+        int tuilePrecedente = plateauCopie[i - 1];
+        int tuile = plateauCopie[i];
+        int tuileSuivante = plateauCopie[i + 1];
 
         if (tuile == 31)
         {
-            tuile = tuilePrecedente + 1;
+            //tuile = tuilePrecedente + 1;
+            if (tuilePrecedente+2 == tuileSuivante)
+            {
+                tuile = tuilePrecedente + 1;
+            }
+            else if(tuileSuivante > tuilePrecedente + 2)
+            {
+                tuile = tuilePrecedente + 1;
+            }
+            else
+            {
+                tuile = tuileSuivante - 1;
+            }
+
+            plateauCopie[i] = tuile;
+            tuile = plateauCopie[i];
         }
 
-        if (tuilePrecedente == 31)
-        {
-            tuilePrecedente = tuile - 1;
-        }
-
-        if (tuile > tuilePrecedente)
+        if (tuile >= tuilePrecedente)
         {
             longueurSuite++;
         }
