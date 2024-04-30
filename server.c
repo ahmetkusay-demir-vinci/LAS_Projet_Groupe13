@@ -30,6 +30,7 @@ int tablePipeEcritureDuFils[MAX_PLAYERS][2];
 // création d'un masque (ensemble) pour les signaux
 sigset_t set;
 
+
 void endRegisterHandler(int sig)
 {
 	end_inscriptions = 1;
@@ -118,8 +119,9 @@ int main(int argc, char *argv[])
 	int sockfd, newsockfd, i;
 	StructMessage msg;
 	int ret;
-	struct pollfd fds[MAX_PLAYERS * 2];
+	
 	int tailleLogiqueEnsemble = NBR_MAX_TUILE;
+	bool enpartie=true;
 
 	ssigemptyset(&set);
 	ssigaddset(&set, SIGINT);
@@ -130,17 +132,20 @@ int main(int argc, char *argv[])
 
 	// Initialisation du socket serveur
 	sockfd = initSocketServeur(atoi(argv[1]));
-	printf("Le serveur tourne sur le port : %i \n", atoi(argv[1]));
+	printf("Le serveur tourne sur le port : %d \n", atoi(argv[1]));
 
-	while (!sigint_pressed)
+	while (enpartie==true)
 	{
+		printf("PHASE D'INSCRIPTIONS\n");
+		struct pollfd fds[MAX_PLAYERS * 2];
 		i = 0;
-
+		
 		// INSCRIPTION PART
 		alarm(TIME_INSCRIPTION);
 
 		while (!end_inscriptions)
 		{
+			
 			/* client trt */
 			newsockfd = accept(sockfd, NULL, NULL); // saccept() exit le programme si accept a été interrompu par l'alarme
 			if (newsockfd > 0)						/* no error on accept */
@@ -175,13 +180,15 @@ int main(int argc, char *argv[])
 				}
 			}
 		}
-
+		
 		printf("FIN DES INSCRIPTIONS\n\n");
 		if (nbPlayers < MIN_PLAYERS || sigint_pressed == 1)
 		{
 			if (sigint_pressed == 1)
 			{
 				printf("PARTIE ANNULEE .. CTRL-C ÉFFECTUÉ \n");
+				enpartie=false;
+				break;
 			}
 			else
 			{
@@ -197,11 +204,11 @@ int main(int argc, char *argv[])
 
 			deconnecterJoueur(tabPlayers, nbPlayers);
 			break;
+			
 		}
 
 		// Blocage des signaux (SIGINT)
 		sigprocmask(SIG_BLOCK, &set, NULL);
-
 		printf("PARTIE VA DEMARRER ... \n");
 		msg.code = START_GAME;
 
@@ -308,6 +315,9 @@ int main(int argc, char *argv[])
 		}
 
 		deconnecterJoueur(tabPlayers, nbPlayers);
+		nbPlayers=0;
+		nbr_tours=0;
+		sigprocmask(SIG_UNBLOCK, &set, NULL);
 	}
 
 	
@@ -315,7 +325,7 @@ int main(int argc, char *argv[])
 	// FIN DE JEU
 
 	// Déblocage des signaux (SIGINT)
-	sigprocmask(SIG_UNBLOCK, &set, NULL);
+	
 	supprimerClassement();
 	supprimerSemaphore();
 	sclose(sockfd);
